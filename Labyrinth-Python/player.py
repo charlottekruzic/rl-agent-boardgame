@@ -13,6 +13,7 @@ class Player(object):
         return len(self.treasures)
 
     def add_treasure(self, treasure: int):
+        print(f"Add trs {treasure}")
         self.treasures.append(treasure)
         self.nb_treasures = len(self.treasures)
 
@@ -81,7 +82,7 @@ class Players(object):
         for i in range(1, self.nb_players + 1):
             for _ in range(0, self.treasures_per_player):
                 treasure = available_treasures[randint(0, len(available_treasures) - 1)]
-                self.players[i].add_treasure(treasure + 1)
+                self.players[i].add_treasure(treasure)
                 available_treasures.remove(treasure)
 
     def get_next_treasure(self, id_player: int):

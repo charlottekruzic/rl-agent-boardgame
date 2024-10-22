@@ -1,37 +1,30 @@
-# Importation des librairies
+import gymnasium as gym
+from gymnasium import spaces
+import numpy as np
 from labyrinthe import NUM_TREASURES, NUM_TREASURES_PER_PLAYER, Labyrinthe
 from gui_manager import GUI_manager
 
-import gymnasium as gym
-from gymnasium import spaces
-
-import numpy as np
-
-
-action_carte = {0: {"up", 1}, 2: {"up", 2}, 1: {"up", 3}, 3: {"up", 3}}
-
-action_mouvement = {0: "droite", 1: "gauche", 2: "haut", 3: "bas"}
-
-
 # Environnement Gym pour le jeu Labyrinthe
 class LabyrinthEnv(gym.Env):
-    metadata = {"render.modes": ["human"]}  # TODO : Peut-être mettre 'rgb_array'
+    metadata = {"render.modes": ["human"]}
 
-    # Fonction permettant d'initialiser l'environnement
     def __init__(self, max_steps=-1):
         super(LabyrinthEnv, self).__init__()
 
         self.max_steps = max_steps
         self.current_step = 0
 
-        # Nb actions possibles par le joueur : 12 emplacements d'insertion * 4 rotations * mouvements (49 pièces)
-        # TODO : Voir si que 11 emplacements d'insertion (pas mouvement inverse)
-        self.action_space = spaces.Discrete(12 * 4 * 49)
+        # Phase du jeu : 0 pour insertion, 1 pour déplacement
+        self.phase = 0
 
-        # Espaces d'observation
-        # Informations sur l'état du jeu
-        # 4 couches pour les murs (N,S,E,O) - TODO : Peut-être à changer
-        # 1 couche pour les joueurs
+        # Espace des actions pour chaque phase
+        # Phase d'insertion : [rotation (4), position d'insertion (12)]
+        self.action_space_insertion = spaces.MultiDiscrete([4, 12])
+
+        # Initialiser l'action_space avec l'espace d'actions de la phase d'insertion
+        self.action_space = self.action_space_insertion
+
+        # Espace d'observation
         self.observation_space = spaces.Box(
             low=0, high=1, shape=(7 * 7 * 5,), dtype=np.float32
         )
@@ -42,111 +35,116 @@ class LabyrinthEnv(gym.Env):
 
         self.reset()
 
-    # Fonction permettant de réinitialiser l'environnement
-    # Retourne l'état du jeu
-    def reset(self, seed=None, options=None):
 
+    def reset(self, seed=None, options=None):
         self.current_step = 0
+        self.phase = 0  # Commence par la phase d'insertion
+
+        # Réinitialiser l'action_space pour la phase d'insertion
+        self.action_space = self.action_space_insertion
 
         # Fixer une seed aléatoire
         self.np_random, seed = gym.utils.seeding.np_random(seed)
 
-        # Paramètres du jeu
+        # Initialisation du jeu
         self.game = Labyrinthe(num_human_players=2, num_ai_players=0)
 
         self.termine = False
         self.derniere_insertion = None
+
         return self._get_observation(), {}
 
-    # Fonction permettant à l'agent de réaliser une action
-    def step(self, action):
 
+    def step(self, action):
         self.current_step += 1
 
-        action_deplacement = action % 49
-        idx_insertion = (action // 49) // 4
-        idx_rotation = action_deplacement % 4
+        # Phase d'insertion
+        if self.phase == 0:
+            rotation_idx, insertion_idx = action
 
-        # print ("idx_insertion : ", idx_insertion)
-        # print ("idx_rotation : ", idx_rotation)
+            # Rotation de la tuile
+            self._appliquer_rotation(rotation_idx)
 
-        # TODO : Voir comment gérer le cas où l'insertion est interdite
-        if self._est_interdit(idx_insertion):
-            recompense = -10  # Récompense : -10 si mouvement interdit
+            # Vérifier si l'insertion est valide
+            if self._est_insertion_interdite(insertion_idx):
+                recompense = -10  # Pénalité pour insertion interdite
+                termine = False
+                tronque = False
+                return self._get_observation(), recompense, termine, tronque, {}
+
+            # Appliquer l'insertion
+            direction, rangee = self._get_insertion(insertion_idx)
+            self.game.play_tile(direction, rangee)
+            self.derniere_insertion = insertion_idx
+
+            # Passer à la phase de déplacement
+            self.phase = 1
+
+            # Définir l'espace des actions pour le déplacement
+            mouvements_possibles = self._get_mouvements_possibles()
+            self.mouvements_possibles = mouvements_possibles  # Sauvegarder pour utilisation ultérieure
+            self.action_space = spaces.Discrete(len(mouvements_possibles))
+
+            # Pas de récompense à cette étape
+            recompense = 0
             termine = False
             tronque = False
             return self._get_observation(), recompense, termine, tronque, {}
 
-        direction, rangee = self._get_insertion(idx_insertion)
-        # print("Direction : ", direction)
-        # print("Rangee : ", rangee)
+        # Phase de déplacement
+        elif self.phase == 1:
+            mouvement_idx = action
 
-        # Rotation
-        self.game.rotate_tile("H" if idx_rotation == 0 else "A")
+            # Vérifier si le mouvement est valide
+            if mouvement_idx < 0 or mouvement_idx >= len(self.mouvements_possibles):
+                recompense = -10  # Pénalité pour mouvement invalide
+                termine = False
+                tronque = False
+                return self._get_observation(), recompense, termine, tronque, {}
 
-        # Insertion de la carte
-        self.game.play_tile(direction, rangee)
-        self.derniere_insertion = idx_insertion
+            # Déplacer le joueur
+            nouvelle_position = self.mouvements_possibles[mouvement_idx]
+            self._deplacer_joueur(nouvelle_position)
 
-        # Calcul des pièces accessibles
-        mouvements_ok = self._get_mouvements_ok()
-        # print("Mouvements possibles : ", mouvements_ok)
-        # print("Action deplacement : ", action_deplacement)
-
-        # Déplacement du joueur
-        """ Choisi un mouvement aléatoire
-        
-        if action_deplacement < len(mouvements_ok):
-            self._deplacer_joueur(mouvements_ok[action_deplacement %len(mouvements_ok)])
-
-            # Vérification si le joueur a trouvé le trésor
+            # Vérifier si le trésor est trouvé
             if self._is_tresor_trouve():
-                self.game.current_player_find_treasure()
-                recompense = 10  # Récompense : 10 si trésor trouvé
+                self.game.get_current_player_num_find_treasure()
+                recompense = 10  # Récompense pour avoir trouvé le trésor
             else:
-                recompense = -1  # Récompense : -1 si pas de trésor trouvé
-        else:
-            print("Mouvement invalide")
-            recompense = -10  # Récompense : -10 si le mouvement est invalide"""
+                recompense = -1  # Pénalité légère pour chaque mouvement
 
-        # Choisi forcément un mouvement valide
-        self._deplacer_joueur(mouvements_ok[action_deplacement % len(mouvements_ok)])
-        if self._is_tresor_trouve():
-            self.game.get_current_player_num_find_treasure()
-            recompense = 10  # Récompense : 10 si trésor trouvé
-        else:
-            recompense = -1  # Récompense : -1 si pas de trésor trouvé
+            # Vérifier si la partie est terminée
+            gagnant = self.game.players.check_for_winner()
+            if gagnant is not None:
+                print(f"Le joueur {gagnant} a gagné la partie !")
+                termine = True
+            else:
+                termine = False
 
-        gagnant = self.game.players.check_for_winner()
-        if gagnant is not None:
-            print(f"Le joueur {gagnant} a gagné la partie !")
-            termine = True  # Terminer la partie
-        else:
-            termine = False
+            if self.max_steps != -1 and (self.current_step >= self.max_steps):
+                termine = True
 
-        if self.max_steps != -1 and (self.current_step >= self.max_steps):
-            termine = True
+            # Réinitialiser pour le prochain tour
+            self.phase = 0
+            self.action_space = self.action_space_insertion
 
-        # termine = self._is_termine()
-        tronque = False  # A définir si on veut arreter la partie avant la fin
+            # Passer au joueur suivant
+            self.game.next_player()
 
-        return self._get_observation(), recompense, termine, tronque, {}
+            tronque = False
+            return self._get_observation(), recompense, termine, tronque, {}
 
-    # Fonction permettant d'afficher le jeu
     def render(self):
         if not hasattr(self, "graphique"):
             # Crée l'interface graphique si elle n'existe pas encore
             self.graphique = GUI_manager(self.game)
         self.graphique.display_game()
 
-    # Fonction permettant de fermer l'environnement
-    # TODO : Voir ce qu'il y a à faire
     def close(self):
         if hasattr(self, "graphique"):
             self.graphique.close()
         super().close()
 
-    # Fonction permettant de retourner l'état actuel du jeu
     def _get_observation(self):
         infos_labyrinthe = np.zeros((7, 7, 5), dtype=np.float32)
         plateau = self.game.get_board()
@@ -156,24 +154,21 @@ class LabyrinthEnv(gym.Env):
             for j in range(7):
                 carte = plateau.get_value(i, j)
                 # Infos murs
-                infos_labyrinthe[i, j, 0] = carte.wall_north()
-                infos_labyrinthe[i, j, 1] = carte.wall_south()
-                infos_labyrinthe[i, j, 2] = carte.wall_east()
-                infos_labyrinthe[i, j, 3] = carte.wall_west()
-                # Infos joueur : 1 = joueur présent
-                if carte.get_nb_pawns() > 0:
+                infos_labyrinthe[i, j, 0] = 1 if carte.wall_north() else 0
+                infos_labyrinthe[i, j, 1] = 1 if carte.wall_south() else 0
+                infos_labyrinthe[i, j, 2] = 1 if carte.wall_east() else 0
+                infos_labyrinthe[i, j, 3] = 1 if carte.wall_west() else 0
+                # Infos joueur : 1 si le joueur courant est présent
+                if carte.has_pawn(self.game.get_current_player()):
                     infos_labyrinthe[i, j, 4] = 1
 
         return infos_labyrinthe.flatten().astype(np.float32)
 
-    # Fonction permettant de vérifier si le joueur a atteint le trésor
     def _is_tresor_trouve(self):
         joueur_pos = self.game.get_coord_current_player()
         tresor_pos = self.game.get_coord_current_treasure()
-
         return joueur_pos == tresor_pos
 
-    # Fonction permettant de déplacer le joueur
     def _deplacer_joueur(self, new_position):
         ligD, colD = self.game.get_coord_current_player()
         ligA, colA = new_position
@@ -183,46 +178,56 @@ class LabyrinthEnv(gym.Env):
         joueur_courant = self.game.players.players[self.game.get_current_player()]
         joueur_courant.move_to((ligA, colA))
 
-    # Fonction permettant de vérifier si le jeu est terminé
-    # TODO : Ajouter le retour à la case de départ ?
-    def _is_termine(self):
-        # TODO changer : fin de partie = un joueur a gagné
-        # return nb_treasures == 0  # Fin jeu : Plus de trésors
-        return False
-
-    # Fonction permettant de récupérer les mouvements valides pour le joueur
-    def _get_mouvements_ok(self):
+    def _get_mouvements_possibles(self):
         ligD, colD = self.game.get_coord_current_player()
-        mouvements_ok = []
+        mouvements_possibles = []
 
-        for ligA in range(7):
-            for colA in range(7):
-                if self.game.accessible(ligD, colD, ligA, colA):
-                    # Ajout à la liste si accessible
-                    mouvements_ok.append((ligA, colA))
+        # Utiliser une recherche en largeur pour trouver toutes les positions accessibles
+        visited = [[False for _ in range(7)] for _ in range(7)]
+        queue = [(ligD, colD)]
+        visited[ligD][colD] = True
 
-        return mouvements_ok
+        while queue:
+            x, y = queue.pop(0)
+            mouvements_possibles.append((x, y))
 
-    # Fonction permettant de vérifier si l'insertion de la carte est interdite (mouvement inverse)
-    def _est_interdit(self, idx_insertion):
-        # print("Derniere insertion : ", self.derniere_insertion)
+            voisins = self._get_voisins_accessibles(x, y)
+            for vx, vy in voisins:
+                if not visited[vx][vy]:
+                    visited[vx][vy] = True
+                    queue.append((vx, vy))
+
+        return mouvements_possibles
+
+    def _get_voisins_accessibles(self, x, y):
+        voisins = []
+        tile = self.game.board.get_value(x, y)
+
+        # Nord
+        if x > 0 and tile.can_go_north(self.game.board.get_value(x - 1, y)):
+            voisins.append((x - 1, y))
+        # Sud
+        if x < 6 and tile.can_go_south(self.game.board.get_value(x + 1, y)):
+            voisins.append((x + 1, y))
+        # Est
+        if y < 6 and tile.can_go_east(self.game.board.get_value(x, y + 1)):
+            voisins.append((x, y + 1))
+        # Ouest
+        if y > 0 and tile.can_go_west(self.game.board.get_value(x, y - 1)):
+            voisins.append((x, y - 1))
+
+        return voisins
+
+    def _est_insertion_interdite(self, idx_insertion):
         if self.derniere_insertion is None:
             return False
 
-        if self.derniere_insertion < 3:
-            idx_inverse = self.derniere_insertion + 3
-        elif self.derniere_insertion < 6:
-            idx_inverse = self.derniere_insertion - 3
-        elif self.derniere_insertion < 9:
-            idx_inverse = self.derniere_insertion + 3
-        else:
-            idx_inverse = self.derniere_insertion - 3
+        # Les positions interdites sont celles qui inversent le dernier mouvement d'insertion
+        if idx_insertion == (self.derniere_insertion + 6) % 12:
+            return True
+        return False
 
-        return idx_insertion == idx_inverse
-
-    # Fonction permettant de récupérer l'insertion au format direction et rangée
     def _get_insertion(self, idx_insertion):
-
         rangees_ok = [1, 3, 5]
 
         if idx_insertion < 3:
@@ -233,3 +238,8 @@ class LabyrinthEnv(gym.Env):
             return ("E", rangees_ok[idx_insertion % 3])
         else:
             return ("O", rangees_ok[idx_insertion % 3])
+
+    def _appliquer_rotation(self, rotation_idx):
+        # 0: 0°, 1: 90°, 2: 180°, 3: 270°
+        for _ in range(rotation_idx):
+            self.game.rotate_tile("H")

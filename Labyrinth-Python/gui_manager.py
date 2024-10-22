@@ -175,6 +175,7 @@ class GUI_manager(object):
         return res
 
     def render_text_treasure(self, treasure):
+        print(f"Debug: treasure = {treasure}")
         if treasure is None:
             # retourner une surface vide
             return pygame.Surface((self.delta, self.delta))

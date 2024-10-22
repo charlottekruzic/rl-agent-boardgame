@@ -254,7 +254,10 @@ def create_movable_tiles(nb_treasures):
         tiles_list.append(carte)
     shuffle(tiles_list)
     # place remaining treasures on the movable tiles
-    for tresor in range(1, nb_treasures + 1):
-        if not tresor in TRESORS_FIXES:
-            tiles_list[tresor].put_treasure(tresor)
+    treasures_to_assign = [tresor for tresor in range(1, nb_treasures + 1) if tresor not in TRESORS_FIXES]
+
+    assert len(treasures_to_assign) <= len(tiles_list), "Not enough tiles to assign all treasures."
+
+    for tile, tresor in zip(tiles_list, treasures_to_assign):
+        tile.put_treasure(tresor)
     return tiles_list
