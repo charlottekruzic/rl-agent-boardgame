@@ -15,7 +15,7 @@ for tour in range(num_tours):
     action = env.action_space.sample()  # Action est un tuple (idx_insertion, idx_rotation, action_deplacement)
 
     # Afficher l'action choisie
-    print(f"Action choisie : Insertion {action[0]}, Rotation {action[1]}, Déplacement {action[2]}")
+    print(f"Action choisie : {action}")
 
     # Effectuer l'action
     observation, recompense, termine, tronque, info = env.step(action)

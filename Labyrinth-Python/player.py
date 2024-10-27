@@ -13,7 +13,6 @@ class Player(object):
         return len(self.treasures)
 
     def add_treasure(self, treasure: int):
-        print(f"Add trs {treasure}")
         self.treasures.append(treasure)
         self.nb_treasures = len(self.treasures)
 

@@ -1,6 +1,6 @@
 import time
 import random
-from gym_env_labyrinthe import LabyrinthEnv
+from gym_env_phases import LabyrinthEnv
 
 # Création de l'environnement et test rapide des fonctions
 env = LabyrinthEnv()

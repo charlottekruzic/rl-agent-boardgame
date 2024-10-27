@@ -87,14 +87,18 @@ class LabyrinthEnv(gym.Env):
             # Conversion de l'action de déplacement en coordonnées
             ligA, colA = divmod(action_deplacement, 7)
             if (ligA, colA) in mouvements_ok:
-                # Déplacement du joueur
+                # Calculer la récompense basée sur la distance au trésor (a voir si c'est efficace)
+                position_joueur_avant = self.game.get_coord_current_player()
+                distance_avant = self._distance_au_tresor(position_joueur_avant)
                 self._deplacer_joueur((ligA, colA))
-                # Vérification si le joueur a trouvé le trésor
+                distance_apres = self._distance_au_tresor((ligA, colA))
+                recompense = (distance_avant - distance_apres) * 0.1  # Ajuster si nécessaire
+
+                # Vérifier si le joueur a trouvé le trésor
                 if self._is_tresor_trouve():
                     self.game.get_current_player_num_find_treasure()
-                    recompense = 10  # Récompense : 10 si trésor trouvé
-                else:
-                    recompense = -1  # Récompense : -1 si pas de trésor trouvé
+                    recompense += 100  # Grande récompense pour avoir trouvé le trésor
+                    self.termine = True
             else:
                 # Mouvement invalide
                 recompense = -10  # Récompense : -10 si le mouvement est invalide
@@ -118,7 +122,7 @@ class LabyrinthEnv(gym.Env):
 
         return self._get_observation(), recompense, termine, tronque, {}
     
-    def render(self):
+    def render(self, mode='human'):
         if not hasattr(self, "graphique"):
             self.graphique = GUI_manager(self.game)
         self.graphique.display_game()
@@ -169,6 +173,14 @@ class LabyrinthEnv(gym.Env):
         }
 
         return observation
+    
+    def _distance_au_tresor(self, position):
+        x1, y1 = position
+        tresor_pos = self.game.get_coord_current_treasure()
+        if tresor_pos is None:
+            return 0
+        x2, y2 = tresor_pos
+        return abs(x1 - x2) + abs(y1 - y2)  # Distance de Manhattan
 
 
     def _is_tresor_trouve(self):
