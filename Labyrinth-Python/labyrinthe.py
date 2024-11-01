@@ -136,8 +136,8 @@ class Labyrinthe(object):
     def get_forbidden_move(self) -> tuple:
         return self.forbidden_move  # c'est quoi la représentation de la direction ??
 
-    def get_coord_current_treasure(self):
-        """Retourne les coordonnées du trésor actuel pour le joueur courant, ou None si aucun trésor trouvé."""
+    def get_coord_current_treasure(self) -> tuple:
+        """return the coordinates of the current treasure to find for the current player"""
         treasure = self.current_treasure()
         for i in range(DIMENSION):
             for j in range(DIMENSION):

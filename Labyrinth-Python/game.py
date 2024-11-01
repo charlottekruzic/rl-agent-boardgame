@@ -97,13 +97,8 @@ class Game(object):
         pygame.quit()
 
     def prendre_decision_ia(self):
-        # Obtenez l'observation actuelle depuis l'environnement
         observation = self.env._get_observation()
-
-        # Utilisez le modèle pour prédire l'action
         action, _ = self.modele.predict(observation, deterministic=True)
-
-        # Appliquez l'action en utilisant step
         self.env.step(action)
 
             
