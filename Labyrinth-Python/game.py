@@ -1,12 +1,17 @@
 from eztext import *
 from gui_manager import *
+from gym_env_labyrinthe import LabyrinthEnv
+from labyrinthe import Labyrinthe
 
 
 class Game(object):
     """Main class of the game, managing the game parameters and the events of the menu window"""
 
-    def __init__(self, human_players, ia_number, directory):
+    def __init__(self, human_players, ia_number, directory, modele=None, env=None):
         """Initialization of the Game class"""
+
+        self.modele = modele
+        self.env = env
 
         self.space = 50  # inutile ?
         self.iOpt = 0  # inutile ?
@@ -35,6 +40,10 @@ class Game(object):
 
         self.human_players = human_players
         self.ia_number = ia_number
+
+        #labyrinthe_instance = Labyrinthe(num_human_players=human_players, num_ai_players=ia_number)
+        #self.env = LabyrinthEnv(labyrinthe=labyrinthe_instance)
+        
 
     def display_font(self):
         """Display the font on the screen"""
@@ -79,9 +88,23 @@ class Game(object):
                 num_human_players=self.human_players,
                 num_ai_players=self.ia_number,
             ),
+            jeu=self,
             prefixeImage=self.directory,
         )
         g.start()
 
         pygame.display.flip()
         pygame.quit()
+
+    def prendre_decision_ia(self):
+        # Obtenez l'observation actuelle depuis l'environnement
+        observation = self.env._get_observation()
+
+        # Utilisez le modèle pour prédire l'action
+        action, _ = self.modele.predict(observation, deterministic=True)
+
+        # Appliquez l'action en utilisant step
+        self.env.step(action)
+
+            
+

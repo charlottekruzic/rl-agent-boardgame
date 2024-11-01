@@ -18,9 +18,10 @@ class LabyrinthEnv(gym.Env):
     metadata = {"render.modes": ["human"]}  # TODO : Peut-être mettre 'rgb_array'
 
     # Fonction permettant d'initialiser l'environnement
-    def __init__(self, max_steps=-1):
+    def __init__(self, max_steps=-1, labyrinthe=None):
         super(LabyrinthEnv, self).__init__()
 
+        self.labyrinthe = labyrinthe
         self.max_steps = max_steps
         self.current_step = 0
 
@@ -40,7 +41,12 @@ class LabyrinthEnv(gym.Env):
         self.termine = False
         self.derniere_insertion = None
 
-        self.reset()
+
+        if self.labyrinthe is None:
+            #self.np_random, seed = gym.utils.seeding.np_random(seed)
+            self.labyrinthe = Labyrinthe(num_human_players=2, num_ai_players=0)
+        
+
 
     # Fonction permettant de réinitialiser l'environnement
     # Retourne l'état du jeu
@@ -49,10 +55,16 @@ class LabyrinthEnv(gym.Env):
         self.current_step = 0
 
         # Fixer une seed aléatoire
-        self.np_random, seed = gym.utils.seeding.np_random(seed)
+
+        #self.np_random, seed = gym.utils.seeding.np_random(seed)
 
         # Paramètres du jeu
-        self.game = Labyrinthe(num_human_players=2, num_ai_players=0)
+        if self.labyrinthe is None:
+            self.labyrinthe = Labyrinthe(num_human_players=2, num_ai_players=0)
+        else:
+            nb_human_players = self.labyrinthe.get_num_human_players()
+            nb_ai_players = self.labyrinthe.get_num_ai_players()
+            self.labyrinthe = Labyrinthe(num_human_players=nb_human_players, num_ai_players=nb_ai_players)
 
         self.termine = False
         self.derniere_insertion = None
@@ -60,6 +72,7 @@ class LabyrinthEnv(gym.Env):
 
     # Fonction permettant à l'agent de réaliser une action
     def step(self, action):
+        #print("Action : ", action)
 
         self.current_step += 1
 
@@ -71,25 +84,38 @@ class LabyrinthEnv(gym.Env):
         # print ("idx_rotation : ", idx_rotation)
 
         # TODO : Voir comment gérer le cas où l'insertion est interdite
-        if self._est_interdit(idx_insertion):
-            recompense = -10  # Récompense : -10 si mouvement interdit
+        if self._est_interdit(idx_insertion):            
+            print("Mouvement interdit")
+            recompense = -100  # Récompense : -10 si mouvement interdit
             termine = False
             tronque = False
-            return self._get_observation(), recompense, termine, tronque, {}
+            #return self._get_observation(), recompense, termine, tronque, {}
 
         direction, rangee = self._get_insertion(idx_insertion)
         # print("Direction : ", direction)
         # print("Rangee : ", rangee)
 
         # Rotation
-        self.game.rotate_tile("H" if idx_rotation == 0 else "A")
+        self.labyrinthe.rotate_tile("H" if idx_rotation == 0 else "A")
 
         # Insertion de la carte
-        self.game.play_tile(direction, rangee)
+        self.labyrinthe.play_tile(direction, rangee)
         self.derniere_insertion = idx_insertion
 
         # Calcul des pièces accessibles
         mouvements_ok = self._get_mouvements_ok()
+
+        # Vérifiez que le mouvement_ok n'est pas vide
+        if not mouvements_ok:
+            print("Mouvement invalide")
+            #print("Mouvements possibles : ", mouvements_ok)
+            recompense = -100
+            termine = False
+            tronque = False
+            return self._get_observation(), recompense, termine, tronque, {}
+        
+
+
         # print("Mouvements possibles : ", mouvements_ok)
         # print("Action deplacement : ", action_deplacement)
 
@@ -101,7 +127,7 @@ class LabyrinthEnv(gym.Env):
 
             # Vérification si le joueur a trouvé le trésor
             if self._is_tresor_trouve():
-                self.game.current_player_find_treasure()
+                self.labyrinthe.current_player_find_treasure()
                 recompense = 10  # Récompense : 10 si trésor trouvé
             else:
                 recompense = -1  # Récompense : -1 si pas de trésor trouvé
@@ -112,12 +138,12 @@ class LabyrinthEnv(gym.Env):
         # Choisi forcément un mouvement valide
         self._deplacer_joueur(mouvements_ok[action_deplacement % len(mouvements_ok)])
         if self._is_tresor_trouve():
-            self.game.get_current_player_num_find_treasure()
-            recompense = 10  # Récompense : 10 si trésor trouvé
+            self.labyrinthe.get_current_player_num_find_treasure()
+            recompense = 1000  # Récompense : 10 si trésor trouvé
         else:
             recompense = -1  # Récompense : -1 si pas de trésor trouvé
 
-        gagnant = self.game.players.check_for_winner()
+        gagnant = self.labyrinthe.players.check_for_winner()
         if gagnant is not None:
             print(f"Le joueur {gagnant} a gagné la partie !")
             termine = True  # Terminer la partie
@@ -126,6 +152,8 @@ class LabyrinthEnv(gym.Env):
 
         if self.max_steps != -1 and (self.current_step >= self.max_steps):
             termine = True
+            tronque = True
+            recompense = -100
 
         # termine = self._is_termine()
         tronque = False  # A définir si on veut arreter la partie avant la fin
@@ -136,7 +164,7 @@ class LabyrinthEnv(gym.Env):
     def render(self):
         if not hasattr(self, "graphique"):
             # Crée l'interface graphique si elle n'existe pas encore
-            self.graphique = GUI_manager(self.game)
+            self.graphique = GUI_manager(self.labyrinthe)
         self.graphique.display_game()
 
     # Fonction permettant de fermer l'environnement
@@ -149,7 +177,7 @@ class LabyrinthEnv(gym.Env):
     # Fonction permettant de retourner l'état actuel du jeu
     def _get_observation(self):
         infos_labyrinthe = np.zeros((7, 7, 5), dtype=np.float32)
-        plateau = self.game.get_board()
+        plateau = self.labyrinthe.get_board()
 
         # Récupération des infos sur le plateau
         for i in range(7):
@@ -168,19 +196,19 @@ class LabyrinthEnv(gym.Env):
 
     # Fonction permettant de vérifier si le joueur a atteint le trésor
     def _is_tresor_trouve(self):
-        joueur_pos = self.game.get_coord_current_player()
-        tresor_pos = self.game.get_coord_current_treasure()
+        joueur_pos = self.labyrinthe.get_coord_current_player()
+        tresor_pos = self.labyrinthe.get_coord_current_treasure()
 
         return joueur_pos == tresor_pos
 
     # Fonction permettant de déplacer le joueur
     def _deplacer_joueur(self, new_position):
-        ligD, colD = self.game.get_coord_current_player()
+        ligD, colD = self.labyrinthe.get_coord_current_player()
         ligA, colA = new_position
-        self.game.remove_current_player_from_tile(ligD, colD)
-        self.game.put_current_player_in_tile(ligA, colA)
+        self.labyrinthe.remove_current_player_from_tile(ligD, colD)
+        self.labyrinthe.put_current_player_in_tile(ligA, colA)
 
-        joueur_courant = self.game.players.players[self.game.get_current_player()]
+        joueur_courant = self.labyrinthe.players.players[self.labyrinthe.get_current_player()]
         joueur_courant.move_to((ligA, colA))
 
     # Fonction permettant de vérifier si le jeu est terminé
@@ -192,15 +220,21 @@ class LabyrinthEnv(gym.Env):
 
     # Fonction permettant de récupérer les mouvements valides pour le joueur
     def _get_mouvements_ok(self):
-        ligD, colD = self.game.get_coord_current_player()
+        position = self.labyrinthe.get_coord_current_player()
+        #print("Position joueur : ", position)
+        if position is None:
+            return []
+
+        ligD, colD = position
         mouvements_ok = []
 
         for ligA in range(7):
             for colA in range(7):
-                if self.game.accessible(ligD, colD, ligA, colA):
+                if self.labyrinthe.accessible(ligD, colD, ligA, colA):
                     # Ajout à la liste si accessible
                     mouvements_ok.append((ligA, colA))
 
+        #print("Mouvements possibles : ", mouvements_ok)
         return mouvements_ok
 
     # Fonction permettant de vérifier si l'insertion de la carte est interdite (mouvement inverse)

@@ -31,7 +31,7 @@ class Labyrinthe(object):
             nb_total_treasures=NUM_TREASURES,
             treasures_per_player=NUM_TREASURES_PER_PLAYER,
         )
-        self.ai_players = range(num_human_players + 1, self.total_players + 1)
+        self.ai_players = list(range(num_human_players, self.total_players))
         if num_ai_players > 1:
             self.ia_players_def = range(
                 num_human_players + num_ai_players,
@@ -69,6 +69,9 @@ class Labyrinthe(object):
                     )
         self.tile_to_play: Tile = tiles_list[0]
         self.board = board
+
+        self.num_human_players = num_human_players
+        self.num_ai_players = num_ai_players
 
     def init_board_with_default_7x7_values(self):
         board: Matrix = Matrix()
@@ -120,6 +123,12 @@ class Labyrinthe(object):
 
     def get_players(self) -> Players:
         return self.players
+    
+    def get_num_human_players(self) -> int:
+        return self.num_human_players
+    
+    def get_num_ai_players(self) -> int:
+        return self.num_ai_players
 
     def current_treasure(self) -> int:
         return self.players.get_next_treasure(self.get_current_player())
@@ -127,14 +136,17 @@ class Labyrinthe(object):
     def get_forbidden_move(self) -> tuple:
         return self.forbidden_move  # c'est quoi la représentation de la direction ??
 
-    def get_coord_current_treasure(self) -> tuple:
-        """return the coordinates of the current treasure to find for the current player"""
+    def get_coord_current_treasure(self):
+        """Retourne les coordonnées du trésor actuel pour le joueur courant, ou None si aucun trésor trouvé."""
         treasure = self.current_treasure()
         for i in range(DIMENSION):
             for j in range(DIMENSION):
                 if self.board.get_value(i, j).get_treasure() == treasure:
                     return (i, j)
+        # Si aucun trésor n'est trouvé, retournez None
+        print("Trésor non trouvé pour le joueur", self.current_player)
         return None
+
 
     def get_coord_current_player(self) -> tuple:
         """return the coordinates of the current player"""

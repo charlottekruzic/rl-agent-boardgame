@@ -1,6 +1,11 @@
 import argparse
 from game import Game
 
+from stable_baselines3 import DQN
+from gym_env_labyrinthe import LabyrinthEnv
+
+CHEMIN_MODELE = "modeles/modele_DQN_1.zip"
+dqn_modele = DQN.load(CHEMIN_MODELE)
 
 def main():
     """Main function to start the game"""
@@ -88,7 +93,9 @@ def main():
         )
         exit(1)
 
-    jeu = Game(human_players=nb_humans, ia_number=nb_ia, directory=directory)
+    env = LabyrinthEnv()
+
+    jeu = Game(human_players=nb_humans, ia_number=nb_ia, directory=directory, modele=dqn_modele, env=env)
     jeu.launch()
 
 

@@ -13,11 +13,13 @@ class GUI_manager(object):
     def __init__(
         self,
         labyrinthe: Labyrinthe,
+        jeu,
         titre="Labyrinthe",
         size=(1500, 900),
         couleur=(209, 238, 238),
         prefixeImage="./original_images",
     ):
+        self.jeu = jeu 
         self.info_message = None
         self.info_img = None
         self.labyrinthe: Labyrinthe = labyrinthe
@@ -362,7 +364,7 @@ class GUI_manager(object):
         self.display_playable_tile()
         pygame.display.flip()
 
-    def start(self):  # TODO : à revoir
+    def start(self):
         self.phase = 1
         pygame.time.set_timer(pygame.USEREVENT + 1, 100)
 
@@ -383,119 +385,150 @@ class GUI_manager(object):
                 if ev.key == K_ESCAPE:
                     break
 
+            # Si c'est au tour du joueur humain
             if self.labyrinthe.is_current_player_human():
+                # Gestion des actions du joueur humain ici (événements de touches, souris, etc.)
+                self.handle_human_turn(ev)
+            
+            # Si c'est au tour de l'IA
+            elif not self.fini and self.labyrinthe.is_current_player_ai():
+                
+                # Exécuter le tour de l'IA
+                self.execute_ai_turn()
 
-                if ev.type == KEYDOWN:  # TODO : à revoir
-                    if ev.key == K_KP0:
-                        self.labyrinthe.ajouterCode(0)
-                    if ev.key == K_KP1:
-                        self.labyrinthe.ajouterCode(1)
-                    if ev.key == K_KP2:
-                        self.labyrinthe.ajouterCode(2)
-                    if ev.key == K_KP3:
-                        self.labyrinthe.ajouterCode(3)
-                    if ev.key == K_KP4:
-                        self.labyrinthe.ajouterCode(4)
-                    if ev.key == K_KP5:
-                        self.labyrinthe.ajouterCode(5)
-                    if ev.key == K_KP6:
-                        self.labyrinthe.ajouterCode(6)
-                    if ev.key == K_KP7:
-                        self.labyrinthe.ajouterCode(7)
-                    if ev.key == K_KP8:
-                        self.labyrinthe.ajouterCode(8)
-                    if ev.key == K_KP9:
-                        self.labyrinthe.ajouterCode(9)
-                    if ev.key == K_BACKSPACE:
-                        self.labyrinthe.effacerDernierCode()
-                        self.display_game()
-                if ev.type == pygame.MOUSEBUTTONDOWN:
-                    (x, y) = self.getCase(ev.pos)
-                    if self.fini:
-                        continue
+            pygame.display.flip()
 
-                    if self.phase == 1:
-                        if x == "T":
-                            self.labyrinthe.rotate_tile()
-                        elif x in ["N", "S", "O", "E"]:
-                            if self.labyrinthe.is_forbidden_move(x, y):
-                                self.info_message = (
-                                    "Coup interdit : mouvement opposé au dernier."
-                                )
-                                self.info_img = []
-                            else:
-                                self.labyrinthe.play_tile(x, y)
-                                self.phase = 2  # TODO : revoir gestion des phases, surement autre modele pour gym (3 phases ou seulement 1)
+    def handle_human_turn(self, ev):
+        """Gère le tour du joueur humain en fonction de sa sélection de case."""
+        if ev.type == KEYDOWN:
+            if ev.key == K_KP0:
+                self.labyrinthe.ajouterCode(0)
+            elif ev.key == K_KP1:
+                self.labyrinthe.ajouterCode(1)
+            elif ev.key == K_KP2:
+                self.labyrinthe.ajouterCode(2)
+            elif ev.key == K_KP3:
+                self.labyrinthe.ajouterCode(3)
+            elif ev.key == K_KP4:
+                self.labyrinthe.ajouterCode(4)
+            elif ev.key == K_KP5:
+                self.labyrinthe.ajouterCode(5)
+            elif ev.key == K_KP6:
+                self.labyrinthe.ajouterCode(6)
+            elif ev.key == K_KP7:
+                self.labyrinthe.ajouterCode(7)
+            elif ev.key == K_KP8:
+                self.labyrinthe.ajouterCode(8)
+            elif ev.key == K_KP9:
+                self.labyrinthe.ajouterCode(9)
+            elif ev.key == K_BACKSPACE:
+                self.labyrinthe.effacerDernierCode()
+                self.display_game()
 
-                        elif x != -1:
+        # Gérer les clics de souris pour les actions du joueur humain
+        if ev.type == pygame.MOUSEBUTTONDOWN:
+            (x, y) = self.getCase(ev.pos)
+            if not self.fini and x != -1:
+                if self.phase == 1:
+                    if x == "T":
+                        self.labyrinthe.rotate_tile()
+                    elif x in ["N", "S", "O", "E"]:
+                        if self.labyrinthe.is_forbidden_move(x, y):
                             self.info_message = (
-                                "Insérez d'abord la carte avant de bouger."
-                            )
-                            self.info_img = []
-                    else:
-                        if x in ["T", "N", "S", "O", "E", -1]:
-                            self.info_message = (
-                                "Sélectionnez une case dans le labyrinthe."
+                                "Coup interdit : mouvement opposé au dernier."
                             )
                             self.info_img = []
                         else:
-                            jc = self.labyrinthe.get_current_player()
-                            xD, yD = self.labyrinthe.coords_current_player
-                            chemin = self.labyrinthe.is_accessible(xD, yD, x, y)
-                            if len(chemin) == 0:
-                                self.info_message = (
-                                    "Cette case est inaccessible pour le joueur @img@."
-                                )
-                                self.info_img = [self.draw_pawn_surface(jc)]
-                            else:
-                                self.animated_path(chemin)
-                                c = self.labyrinthe.board.get_value(x, y)
-                                t = self.labyrinthe.current_treasure()
-                                if c.get_treasure() == t:
-                                    self.labyrinthe.remove_current_treasure()
-                                    if (
-                                        self.labyrinthe.get_current_player_remaining_treasure()
-                                        == 0
-                                    ):
-                                        self.info_message = "Le joueur @img@ a gagné"
-                                        self.info_img = [self.draw_pawn_surface(jc)]
-                                        self.fini = True
-                                    else:
-                                        self.info_message = (
-                                            "Le joueur @img@ a trouvé le trésor @img@."
-                                        )
-                                        self.info_img = [
-                                            self.draw_pawn_surface(jc),
-                                            self.render_text_treasure(t),
-                                        ]
-                                self.labyrinthe.next_player()
-                                self.phase = 1
-
-                    self.display_game()
-            # TODO : gestion de l'IA : temporiser les coups
-            elif not self.fini:
-                if self.labyrinthe.is_current_player_ai():
-                    chemin = self.labyrinthe.getCheminDefensif()
-                else:
-                    chemin = self.labyrinthe.getMeilleurAction()
-                jc = self.labyrinthe.get_current_player()
-                self.animated_path(chemin)
-                x, y = self.labyrinthe.get_coord_current_treasure()
-                c: Tile = self.labyrinthe.board.get_value(x, y)
-                t: int = self.labyrinthe.current_treasure()  # nb of treasure to find
-                if c.get_treasure() == t:
-                    self.labyrinthe.remove_current_treasure()
-                    if self.labyrinthe.get_current_player_num_find_treasure() == 0:
-                        self.info_message = "L'IA @img@ a gagné !!!"
-                        self.info_img = [self.draw_pawn_surface(jc)]
-                        self.fini = True
+                            self.labyrinthe.play_tile(x, y)
+                            self.phase = 2
                     else:
-                        self.info_message = "L'IA @img@ a trouvé le trésor @img@"
-                        self.info_img = [
-                            self.draw_pawn_surface(jc),
-                            self.render_text_treasure(t),
-                        ]
-
-                self.labyrinthe.next_player()
+                        self.info_message = (
+                            "Insérez d'abord la carte avant de bouger."
+                        )
+                        self.info_img = []
+                else:
+                    if x in ["T", "N", "S", "O", "E", -1]:
+                        self.info_message = (
+                            "Sélectionnez une case dans le labyrinthe."
+                        )
+                        self.info_img = []
+                    else:
+                        jc = self.labyrinthe.get_current_player()
+                        xD, yD = self.labyrinthe.coords_current_player
+                        chemin = self.labyrinthe.is_accessible(xD, yD, x, y)
+                        if len(chemin) == 0:
+                            self.info_message = (
+                                "Cette case est inaccessible pour le joueur @img@."
+                            )
+                            self.info_img = [self.draw_pawn_surface(jc)]
+                        else:
+                            self.animated_path(chemin)
+                            c = self.labyrinthe.board.get_value(x, y)
+                            t = self.labyrinthe.current_treasure()
+                            if c.get_treasure() == t:
+                                self.labyrinthe.remove_current_treasure()
+                                if (
+                                    self.labyrinthe.get_current_player_remaining_treasure()
+                                    == 0
+                                ):
+                                    self.info_message = "Le joueur @img@ a gagné"
+                                    self.info_img = [self.draw_pawn_surface(jc)]
+                                    self.fini = True
+                                else:
+                                    self.info_message = (
+                                        "Le joueur @img@ a trouvé le trésor @img@."
+                                    )
+                                    self.info_img = [
+                                        self.draw_pawn_surface(jc),
+                                        self.render_text_treasure(t),
+                                    ]
+                            self.labyrinthe.next_player()
+                            self.phase = 1
                 self.display_game()
-            pygame.display.flip()
+
+    def execute_ai_turn(self):
+        """Exécute un tour de l'IA en effectuant un mouvement et en vérifiant l'état du jeu."""
+        print("Tour de l'IA")
+        print("position actuelle du joueur :", self.labyrinthe.coords_current_player)
+        self.jeu.prendre_decision_ia()  # Prendre la décision IA
+
+        
+        
+        # Obtenir les informations de l'IA pour l'afficher
+        jc = self.labyrinthe.get_current_player()
+        xD, yD = self.labyrinthe.coords_current_player
+
+        # Obtenir les coordonnées du trésor
+        '''treasure_coords = self.labyrinthe.get_coord_current_treasure()
+        if treasure_coords is None:
+            print("Aucun trésor disponible pour le joueur IA", jc)
+            self.labyrinthe.next_player()
+            self.display_game()
+            return
+
+        x, y = treasure_coords  # Déstructuration après vérification
+
+        chemin = self.labyrinthe.is_accessible(xD, yD, x, y)
+        print("Chemin trouvé par l'IA :", chemin)
+        if chemin:
+            self.animated_path(chemin)  # Animation du chemin
+
+            # Vérifier si l'IA a trouvé un trésor
+            c = self.labyrinthe.board.get_value(x, y)
+            t = self.labyrinthe.current_treasure()
+            if c.get_treasure() == t:
+                self.labyrinthe.remove_current_treasure()  # Retirer le trésor
+                if self.labyrinthe.get_current_player_remaining_treasure() == 0:
+                    self.info_message = "L'IA @img@ a gagné !!!"
+                    self.info_img = [self.draw_pawn_surface(jc)]
+                    self.fini = True
+                else:
+                    self.info_message = "L'IA @img@ a trouvé le trésor @img@"
+                    self.info_img = [
+                        self.draw_pawn_surface(jc),
+                        self.render_text_treasure(t),
+                    ]'''
+        
+        # Passer au joueur suivant
+        self.labyrinthe.next_player()
+        self.display_game()
