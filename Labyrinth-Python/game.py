@@ -1,8 +1,8 @@
 from eztext import *
 from gui_manager import *
-from stable_baselines3 import PPO
+from sb3_contrib import MaskablePPO
 
-from gym_env_2dim import LabyrinthEnv
+from gym_env_2dim_modif import LabyrinthEnv
 
 
 class Game(object):
@@ -44,7 +44,7 @@ class Game(object):
 
         self.model = None
         if self.use_rl_agent:
-            self.model = PPO.load("./modeles/best_model.zip")
+            self.model = MaskablePPO.load("./modeles/agent_4/modele_10000_steps.zip")
   
 
     def display_font(self):

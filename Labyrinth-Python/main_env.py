@@ -1,6 +1,6 @@
 import time
 import random
-from gym_env_2dim import LabyrinthEnv
+from gym_env_2dim_modif import LabyrinthEnv
 import pythoncom
 import pygame
 
@@ -21,9 +21,12 @@ for tour in range(num_tours):
             pygame.quit()
             exit()
 
+    print("actions possibles : ", env.action_space)
+
+
     # Au hasard pour le test (phase 0 et 1)
     if env.phase == 0:
-        action = env.action_space_insertion.sample()
+        action = env.action_space.sample()
     else:
         action = env.action_space.sample()
 

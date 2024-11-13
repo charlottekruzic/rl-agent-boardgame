@@ -29,7 +29,7 @@ class ExplorationExploitationCallback(BaseCallback):
         elif reward < 0:
             self.negative_rewards += 1
 
-        if self.n_calls % 1000 == 0:
+        if self.n_calls % 5000 == 0:
             self.logger.record("exploration_exploitation/positive_rewards", self.positive_rewards)
             self.logger.record("exploration_exploitation/negative_rewards", self.negative_rewards)
         return True

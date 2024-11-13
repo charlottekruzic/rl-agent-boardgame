@@ -611,10 +611,11 @@ class GUI_manager(object):
                 if self.rl_model:
                     # Récupération action insertion de la tuile
                     obs = self.env._get_observation()
-                    action, _ = self.rl_model.predict(obs, deterministic=True)
+                    mask = self.env.get_action_mask()
+                    action, _ = self.rl_model.predict(obs, deterministic=True, action_masks=mask)
                     
                     # Ajout de la tuile au labyrinthe
-                    rotation_idx, insertion_idx = action
+                    rotation_idx, insertion_idx, _ = action
                 
                     direction_map = {0: "N", 1: "E", 2: "S", 3: "O"}
                     direction = direction_map[rotation_idx]
@@ -631,7 +632,9 @@ class GUI_manager(object):
 
                     # Récupération de l'action de déplacement
                     obs = self.env._get_observation()
-                    movement_action, _ = self.rl_model.predict(obs, deterministic=True)
+                    mask = self.env.get_action_mask()
+                    action, _ = self.rl_model.predict(obs, deterministic=True, action_masks=mask)
+                    _, _, movement_action = action
 
                     print("Action de déplacement :", movement_action)
 
@@ -639,8 +642,13 @@ class GUI_manager(object):
                     
                     #print("Mouvements possibles :", mouvements_possibles)
 
+                    
+                    ligne, colonne = divmod(movement_action, 7)
+                    nouvelle_position = (ligne, colonne)
+                    self.env._deplacer_joueur(nouvelle_position)  
+
                     # Vérification de l'action de déplacement
-                    if isinstance(movement_action[0], int) and 0 <= movement_action[0] < len(mouvements_possibles):
+                    '''if isinstance(movement_action[0], int) and 0 <= movement_action[0] < len(mouvements_possibles):
                         nouvelle_position = mouvements_possibles[movement_action[0]]
 
                         if 0 <= nouvelle_position[0] < DIMENSION and 0 <= nouvelle_position[1] < DIMENSION:
@@ -648,7 +656,7 @@ class GUI_manager(object):
                         else:
                             print("Déplacement hors limites. Le joueur reste à sa position.")
                     else:
-                        print("Action de déplacement invalide. Le joueur reste à sa position.")
+                        print("Action de déplacement invalide. Le joueur reste à sa position.")'''
 
                     # Déplacement sur labyrinth
                     

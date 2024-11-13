@@ -72,11 +72,13 @@ class LabyrinthEnv(gym.Env):
         if self.phase == 0:
 
             # Eviter de tourner en rond
+            '''
             if np.random.rand() < self.epsilon:
                 original_insertion_idx = insertion_idx
                 insertion_idx = np.random.choice(np.where(self.action_mask[1] == 1)[0])
                 info["action_modified"] = True
                 recompense -= 0.05
+            '''
                 
             #rotation_idx, insertion_idx = action
 
@@ -90,8 +92,8 @@ class LabyrinthEnv(gym.Env):
                 recompense += -0.7
                 print("insertion interdite !")
             else:
-                print("insertion : ", insertion_idx)
-                print("masque insertion : ", self.action_mask) 
+                #print("insertion : ", insertion_idx)
+                #print("masque insertion : ", self.action_mask) 
                 #print("derniere insertion : ", self.derniere_insertion)
                 self.derniere_insertion = insertion_idx
                 direction, rangee = self._get_insertion(insertion_idx)
@@ -118,12 +120,12 @@ class LabyrinthEnv(gym.Env):
             
             #mouvement_idx = action
             #print("Mouvement choisi : ", mouvement_idx)
-            print("mask : ", self.action_mask)
+            #print("mask : ", self.action_mask)
 
             actions_possibles = np.where(self.action_mask == 1)[0]
             #print("Actions possibles selon le masque : ", actions_possibles)
 
-            if self.action_mask[mouvement_idx] == 0:
+            if self.action_mask[2][mouvement_idx] == 0:
                 print("Mouvement invalide !")
                 recompense -= 0.7
                 termine = False
@@ -134,7 +136,7 @@ class LabyrinthEnv(gym.Env):
                 info["action_mask"] =  self.action_mask
                 return self._get_observation(), self.recompense[joueur_id], termine, tronque, info
             else:
-                print("deplacement : ", mouvement_idx)
+                #print("deplacement : ", mouvement_idx)
                 ancienne_position = self.game.get_coord_player()
                 ligne, colonne = divmod(mouvement_idx, 7)
                 nouvelle_position = (ligne, colonne)
@@ -183,27 +185,31 @@ class LabyrinthEnv(gym.Env):
 
     def _get_action_mask(self):
         if self.phase == 0:
-            mask_0 = np.ones(4, dtype=np.int32) 
-            mask_1 = np.ones(12, dtype=np.int32)
-            
+            mask_rotation = np.ones(4, dtype=np.int32) 
+            mask_insertion = np.ones(12, dtype=np.int32)
             if self.derniere_insertion is not None:
-                mask_1[(self.derniere_insertion + 6) % 12] = 0
-            
-            return [mask_0, mask_1]
+                mask_insertion[(self.derniere_insertion + 6) % 12] = 0
+
+            return [mask_rotation, mask_insertion, np.zeros(49, dtype=np.int32)]
 
         elif self.phase == 1:
-            mask_2 = np.zeros(49, dtype=np.int32)
+            mask_rotation = np.zeros(4, dtype=np.int32)
+            mask_insertion = np.zeros(12, dtype=np.int32)
+            mask_mouvement = np.zeros(49, dtype=np.int32)
+
             self.mouvements_possibles = self._get_mouvements_possibles()
             for x, y in self.mouvements_possibles:
                 index = x * 7 + y
-                mask_2[index] = 1
-        
-            return mask_2
+                mask_mouvement[index] = 1
+                
+            return [mask_rotation, mask_insertion, mask_mouvement]
 
         else:
             raise ValueError("Phase inconnue")
 
-
+    def get_action_mask(self):
+        return self._get_action_mask()
+    
     def se_rapproche_du_tresor(self, ancienne_position, nouvelle_position, joueur_id=None):
         if joueur_id is None:
             joueur_id = self.game.get_current_player()
