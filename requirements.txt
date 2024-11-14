@@ -13,5 +13,3 @@ seaborn
 stable_baselines3
 streamlit
 sqlalchemy 
-
-pywin32

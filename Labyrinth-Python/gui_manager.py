@@ -3,7 +3,7 @@ from eztext import *
 import pygame
 import time
 import os
-import pythoncom
+# import pythoncom
 
 NB_MAX_PLAYER = 4  # TODO : enlever ça
 
@@ -27,7 +27,7 @@ class GUI_manager(object):
 
         self.info_message = None
         self.info_img = None
-        self.labyrinthe = labyrinthe
+        self.labyrinthe : Labyrinthe = labyrinthe
         self.fini = False
         self.text_color = couleur
         self.matrix = labyrinthe.board
@@ -462,23 +462,18 @@ class GUI_manager(object):
         self.display_score(5)
         pygame.display.flip()
 
-    def start(self):  # TODO : à revoir
-        self.phase = 1
-        pygame.time.set_timer(pygame.USEREVENT + 1, 100)
-
-        # Boucle d'événements
+    def get_action_phase_insertion(self):
         while True:
-
-            pythoncom.PumpWaitingMessages()
-
             ev = pygame.event.wait()
 
             if ev.type == pygame.QUIT:
                 print("Fermeture de la fenêtre")
-                break
-
-            if ev.type == pygame.USEREVENT + 1:
                 pygame.display.flip()
+                pygame.quit()  
+                exit(0)
+
+            # if ev.type == pygame.USEREVENT + 1:
+            #     pygame.display.flip()
 
             if ev.type == pygame.VIDEORESIZE:
                 self.update_parameters()
@@ -486,185 +481,91 @@ class GUI_manager(object):
 
             if ev.type == KEYDOWN:
                 if ev.key == K_ESCAPE:
-                    break
+                    pygame.quit()
+                    exit(0)
 
-            if self.labyrinthe.is_current_player_human():
-
-                if ev.type == KEYDOWN:  # TODO : à revoir
-                    if ev.key == K_KP0:
-                        self.labyrinthe.ajouterCode(0)
-                    if ev.key == K_KP1:
-                        self.labyrinthe.ajouterCode(1)
-                    if ev.key == K_KP2:
-                        self.labyrinthe.ajouterCode(2)
-                    if ev.key == K_KP3:
-                        self.labyrinthe.ajouterCode(3)
-                    if ev.key == K_KP4:
-                        self.labyrinthe.ajouterCode(4)
-                    if ev.key == K_KP5:
-                        self.labyrinthe.ajouterCode(5)
-                    if ev.key == K_KP6:
-                        self.labyrinthe.ajouterCode(6)
-                    if ev.key == K_KP7:
-                        self.labyrinthe.ajouterCode(7)
-                    if ev.key == K_KP8:
-                        self.labyrinthe.ajouterCode(8)
-                    if ev.key == K_KP9:
-                        self.labyrinthe.ajouterCode(9)
-                    if ev.key == K_BACKSPACE:
-                        self.labyrinthe.effacerDernierCode()
-                        self.display_game()
-                if ev.type == pygame.MOUSEBUTTONDOWN:
-                    (x, y) = self.get_case(ev.pos)
-                    if self.fini:
-                        continue
-
-                    if self.phase == 1:
-                        if x == "T":
-                            self.labyrinthe.rotate_tile()
-                        elif x in ["N", "S", "O", "E"]:
-                            if self.labyrinthe.is_forbidden_move(x, y):
-                                self.info_message = (
-                                    "Coup interdit : mouvement opposé au dernier."
-                                )
-                                self.info_img = []
-                            else:
-                                self.labyrinthe.play_tile(x, y)
-                                self.phase = 2  # TODO : revoir gestion des phases, surement autre modele pour gym (3 phases ou seulement 1)
-
-                        elif x != -1:
-                            self.info_message = (
-                                "Insérez d'abord la carte avant de bouger."
-                            )
-                            self.info_img = []
+            if ev.type == pygame.MOUSEBUTTONDOWN:
+                (x,y) = self.get_case(ev.pos)
+                if x == "T":
+                    self.labyrinthe.rotate_tile()
+                elif x in ["N", "S", "O", "E"]:
+                    if self.labyrinthe.is_forbidden_move(x, y):
+                        self.info_message = "Coup interdit : mouvement opposé au dernier."
+                        self.info_img = []
+                        return self.get_action_phase_insertion()
                     else:
-                        if x in ["T", "N", "S", "O", "E", -1]:
-                            self.info_message = (
-                                "Sélectionnez une case dans le labyrinthe."
-                            )
-                            self.info_img = []
-                        else:
-                            jc = self.labyrinthe.get_current_player()
-                            xD, yD = self.labyrinthe.coords_current_player
-                            chemin = self.labyrinthe.is_accessible(xD, yD, x, y)
-                            if len(chemin) == 0:
-                                self.info_message = (
-                                    "Cette case est inaccessible pour le joueur @img@"
-                                )
-                                self.info_img = [self.render_text_pawn_surface(jc)]
-                            else:
-                                self.animated_path(chemin)
-                                c = self.labyrinthe.board.get_value(x, y)
-                                t = self.labyrinthe.current_treasure()
-                                player_at_start = (
-                                    self.labyrinthe.get_coord_player()
-                                    == self.labyrinthe.get_current_player_object().get_start_position()
-                                )
-                                if c.get_treasure() == t:
-                                    self.labyrinthe.remove_current_treasure()
-                                    if (
-                                        self.labyrinthe.get_current_player_remaining_treasure()
-                                        == 0
-                                    ):
-                                        if player_at_start:
-                                            self.info_message = (
-                                                "Le joueur @img@ a gagné"
-                                            )
-                                            self.info_img = [
-                                                self.render_text_pawn_surface(jc)
-                                            ]
-                                            self.fini = True
-                                        else:
-                                            self.info_message = "Le joueur @img@ trouvé tous ses trésors, retournez à @img@ pour gagner"
-                                            self.info_img = [
-                                                self.render_text_pawn_surface(jc),
-                                                self.render_text_base(jc),
-                                            ]
-                                    else:
-                                        self.info_message = (
-                                            "Le joueur @img@ a trouvé le trésor @img@"
-                                        )
-                                        self.info_img = [
-                                            self.render_text_pawn_surface(jc),
-                                            self.render_text_treasure(t),
-                                        ]
-
-                                if (
-                                    self.labyrinthe.get_current_player_remaining_treasure()
-                                    == 0
-                                    and player_at_start
-                                ):
-                                    self.info_message = "Le joueur @img@ a gagné"
-                                    self.info_img = [self.render_text_pawn_surface(jc)]
-                                    self.fini = True
-
-                                self.labyrinthe.next_player()
-                                self.phase = 1
-
-                    self.display_game()
-            # TODO : gestion de l'IA : temporiser les coups
-            # TODO : Zoé pour la DB
-            elif not self.fini:
-                if self.rl_model:
-                    # Récupération action insertion de la tuile
-                    obs = self.env._get_observation()
-                    action, _ = self.rl_model.predict(obs, deterministic=True)
-
-                    # Ajout de la tuile au labyrinthe
-                    rotation_idx, insertion_idx = action
-
-                    direction_map = {0: "N", 1: "E", 2: "S", 3: "O"}
-                    direction = direction_map[rotation_idx]
-
-                    insertion_positions = [1, 3, 5]
-                    index = insertion_positions[insertion_idx % 3]
-
-                    self.labyrinthe.play_tile(direction, index)
-
-                    # Affichage sur labyrinthe graphique
-                    self.display_game()
-                    pygame.display.flip()
-                    time.sleep(0.5)
-
-                    # Récupération de l'action de déplacement
-                    obs = self.env._get_observation()
-                    movement_action, _ = self.rl_model.predict(obs, deterministic=True)
-
-                    print("Action de déplacement :", movement_action)
-
-                    mouvements_possibles = self.env._get_mouvements_possibles(
-                        joueur_id=self.env.game.get_current_player()
+                        return (None, x, y)
+                elif x != -1:
+                    self.info_message = (
+                        "Insérez d'abord la carte avant de bouger."
                     )
+                    self.info_img = []
+            
+    def get_player_deplacement(self):
+        while True: 
+            ev = pygame.event.wait()
 
-                    # Vérification de l'action de déplacement
-                    if isinstance(movement_action[0], int) and 0 <= movement_action[
-                        0
-                    ] < len(mouvements_possibles):
-                        nouvelle_position = mouvements_possibles[movement_action[0]]
+            if ev.type == pygame.QUIT:
+                print("Fermeture de la fenêtre")
+                pygame.display.flip()
+                pygame.quit()  
+                exit(0)
 
-                        if (
-                            0 <= nouvelle_position[0] < DIMENSION
-                            and 0 <= nouvelle_position[1] < DIMENSION
-                        ):
-                            self.env._deplacer_joueur(nouvelle_position)
-                        else:
-                            print(
-                                "Déplacement hors limites. Le joueur reste à sa position."
-                            )
-                    else:
-                        print(
-                            "Action de déplacement invalide. Le joueur reste à sa position."
-                        )
+            # if ev.type == pygame.USEREVENT + 1:
+            #     pygame.display.flip()
 
-                    # Déplacement sur labyrinth
-
-                    # Afficahge
-                    self.display_game()
-                    pygame.display.flip()
-                    time.sleep(0.5)
-                else:
-                    print("Modèle RL manquant pour l'agent.")
-
-                self.labyrinthe.next_player()
+            if ev.type == pygame.VIDEORESIZE:
+                self.update_parameters()
                 self.display_game()
-            pygame.display.flip()
+
+            if ev.type == KEYDOWN:
+                if ev.key == K_ESCAPE:
+                    pygame.quit()
+                    exit(0)
+    
+            if ev.type == pygame.MOUSEBUTTONDOWN:
+                (x,y) = self.get_case(ev.pos)
+                
+                if x in ["T", "N", "S", "O", "E", -1]:
+                    self.info_message = (
+                        "Sélectionnez une case dans le labyrinthe."
+                    )
+                    self.info_img = []
+
+                else : 
+                    curr_player = self.labyrinthe.get_current_player()
+                    xD, yD = self.labyrinthe.coords_current_player
+                    chemin = self.labyrinthe.is_accessible(xD, yD, x, y)
+                    if len(chemin) == 0:
+                        self.info_message = (
+                            "Cette case est inaccessible pour le joueur @img@"
+                        )
+                        self.info_img = [self.render_text_pawn_surface(curr_player)]
+                        
+                    else:
+                        return x, y
+
+              
+    def display_fin_de_partie(self):
+        self.info_message = (
+            "Le joueur @img@ a gagné"
+        )
+        self.info_img = [
+            self.render_text_pawn_surface(self.labyrinthe.get_current_player())
+        ]
+    
+    def display_return_base(self):
+        self.info_message = "Le joueur @img@ a trouvé tous ses trésors, retournez à @img@ pour gagner"
+        self.info_img = [
+            self.render_text_pawn_surface(self.labyrinthe.get_current_player()),
+            self.render_text_base(self.labyrinthe.get_current_player()),
+        ]
+        
+    def display_treasure_found(self, t):
+        self.info_message = (
+            "Le joueur @img@ a trouvé le trésor @img@"
+        )
+        self.info_img = [
+            self.render_text_pawn_surface(self.labyrinthe.get_current_player()),
+            self.render_text_treasure(t),
+        ]

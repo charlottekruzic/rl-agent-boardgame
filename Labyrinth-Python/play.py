@@ -1,5 +1,5 @@
 import argparse
-from game import Game
+from game import GameEngine
 
 
 def main():
@@ -79,10 +79,10 @@ def main():
 
     # Get the directory based on the theme provided
     theme = args.theme.lower()  # Convert to lowercase to make it case-insensitive
-    directory = theme_directories.get(theme)
+    theme_directory = theme_directories.get(theme)
 
     # Validate the directory
-    if not directory:
+    if not theme_directory:
         print(
             f"Error: Theme '{theme}' is not recognized. Available themes are: {', '.join(theme_directories.keys())}."
         )
@@ -92,10 +92,10 @@ def main():
     if nb_ia > 0:
         use_rl_agent = True
 
-    jeu = Game(
+    jeu = GameEngine(
         human_players=nb_humans,
         ia_number=nb_ia,
-        directory=directory,
+        theme_directory=theme_directory,
         use_rl_agent=use_rl_agent,
     )
     jeu.launch()

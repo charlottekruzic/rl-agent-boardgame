@@ -1,10 +1,6 @@
 from tile import *
 from matrix import DIMENSION, Matrix
 from player import *
-import copy
-
-# TODO : change robjects name -> 1 to ... (7 x 7 - 3 (colonnes impair) *  7 - 3 * 4 (lignes impair sans case commune avec colonne) - 4 coins) )
-# puis dans le code là où c'est complété -> complété jusqu'au bon nombre (pas 24 si le plateau ne fait pas 24)
 
 NUM_TREASURES = 24
 NUM_TREASURES_PER_PLAYER = 6
@@ -161,12 +157,11 @@ class Labyrinthe(object):
         else:
             self.phase = 1
 
+    def player_at_start(self):
+        self.get_coord_player() == self.get_current_player_object().get_start_position()
+
     def next_player(self):
         """change the current player"""
-        # TODO : modulo nb joueurs... améliorer
-        # current = self.get_current_player()
-        # current += 1
-        # 1 à 4 ou 0 à 3 ???
         self.current_player += 1
         self.current_player %= self.get_num_players()
         self.coords_current_player = self.get_coord_player()
@@ -363,207 +358,6 @@ class Labyrinthe(object):
                         val = matTest.get_value(x, y)
             chemin.reverse()
             return chemin
-
-    def get_accessible_current_player(self, rowE, colE):
-        """return the path from the current player to the cell (rowE, colE) if it exists
-        if not return None"""
-        (ligD, colD) = self.get_coord_player()
-        return self.is_accessible(ligD, colD, rowE, colE)
-
-    # TODO :
-    # tout ça : doit disaparaitre
-    ###################
-    # Gestion de l'IA #
-    ###################
-    # L'idée est de testé toutes les possibilité avec une copie du labyrinte
-
-    # fonction renvoyant la position accessible a partir de posDepart où la distance entre posDepart et posCible est minimale ( recherche en "étoile" )
-    def getPositionMinDistance(self, posCible, posDepart):
-        listePos = {posCible}
-        dist = 0
-        xD, yD = posDepart
-        continuer = True
-        while (
-            continuer
-        ):  # La boucle s'arrete quand on trouve une position accessible au plus pres de la pôsition Cible
-            listeNewPos = (
-                set()
-            )  # On utilise un ensemble afin de reduire le nombre de calculs, mais cela oblige a mettre un return dans la boucle for
-            ld = []
-            for pos in listePos:
-                x, y = pos
-                if x > 0:
-                    xN = x - 1
-                    yN = y
-                    d = distance((xN, y), posCible)
-                    if d > dist:
-                        ld.append(d)
-                        if self.accessible(xN, y, xD, yD):
-                            continuer = False
-                            return ((xN, y), d)
-                        else:
-                            listeNewPos.add((xN, y))
-                if DIMENSION - 1 > x:
-                    xN = x + 1
-                    yN = y
-                    d = distance((xN, y), posCible)
-                    if d > dist:
-                        ld.append(d)
-                        if self.accessible(xN, y, xD, yD):
-                            continuer = False
-                            return ((xN, y), d)
-                        else:
-                            listeNewPos.add((xN, y))
-                if y > 0:
-                    yN = y - 1
-                    xN = x
-                    d = distance((x, yN), posCible)
-                    if d > dist:
-                        ld.append(d)
-                        if self.accessible(x, yN, xD, yD):
-                            continuer = False
-                            return ((x, yN), d)
-                        else:
-                            listeNewPos.add((x, yN))
-                if DIMENSION - 1 > y:
-                    yN = y + 1
-                    xN = x
-                    d = distance((x, yN), posCible)
-                    if d > dist:
-                        ld.append(d)
-                        if self.accessible(x, yN, xD, yD):
-                            continuer = False
-                            return ((x, yN), d)
-                        else:
-                            listeNewPos.add((x, yN))
-            dist = min(ld)
-            listePos = listeNewPos
-
-    # Calcul la "meilleur" action celle ou le joueurCourant peut trouver son tresor si c'est possible,
-    # sinon l'action choisie est celle minimisant la distance de ce joueur au tresors apres s'être déplacé,
-    # revoie le chemin du joueur a effectuer
-    # Change l'orientation de la carte et le coup interdit
-    def getMeilleurAction(self):
-        actionsPossible = []
-        lDirection = ["N", "E", "S", "O"]
-        lRangee = [1, 3, 5]
-        nbRotation = 0
-        continuer = True
-        while nbRotation < 4 and continuer:
-            j = 0
-            while j < len(lDirection) and continuer:
-                direction = lDirection[j]
-                k = 0
-                while k < len(lRangee) and continuer:
-                    rangee = lRangee[k]
-                    labyTest = copy.deepcopy(self)
-                    labyTest.play_tile(direction, rangee)
-                    posT = labyTest.get_coord_current_treasure()
-                    xJ, yJ = labyTest.get_coord_player()
-                    if posT != None:  # Cas ou le tresors sort du plateau
-                        xT, yT = posT
-                        if labyTest.accessible(xJ, yJ, xT, yT):
-                            self.play_tile(direction, rangee)
-                            continuer = False
-                        else:
-                            (xC, yC), d = labyTest.getPositionMinDistance(
-                                (xT, yT), (xJ, yJ)
-                            )
-                            if xC != xJ or yC != yJ or actionsPossible == []:
-                                actionsPossible.append(
-                                    (nbRotation, direction, rangee, xC, yC, d)
-                                )
-                    k += 1
-                j += 1
-            self.rotate_tile()
-            nbRotation += 1
-
-        if continuer:
-
-            def getDistance(elem):
-                return elem[5]
-
-            (nbRotation, direction, rangee, xC, yC, d) = min(
-                actionsPossible, key=getDistance
-            )
-            for i in range(nbRotation):
-                self.rotate_tile()
-            self.play_tile(direction, rangee)
-            xJ, yJ = self.get_coord_player()
-            return self.is_accessible(xJ, yJ, xC, yC)
-        else:
-            return self.is_accessible(xJ, yJ, xT, yT)
-
-    # Fonction cherchant le meilleur coup pour empecher le joueur suivant de trouver son tresor
-    def getMeilleurActionDefensive(self):
-        actionsPossible = []
-        lDirection = ["N", "E", "S", "O"]
-        lRangee = [1, 3, 5]
-        i = 0
-        continuer = True
-        while i < len(lDirection) and continuer:
-            direction = lDirection[i]
-            j = 0
-            while j < len(lRangee) and continuer:
-                rangee = lRangee[j]
-                nbRotation = 0
-                while nbRotation < 4 and continuer:
-                    # On crée une copy du labyrinthe pour ne pas altérer la structure initiale
-                    labyTest = copy.deepcopy(self)
-                    for i in range(nbRotation):
-                        labyTest.rotate_tile()
-                    labyTest.play_tile(direction, rangee)
-                    labyTest.next_player()
-                    cptCoupGG = 0
-                    for nbRotationT in range(4):
-                        labyTest.rotate_tile()
-                        for directionT in "NESO":
-                            for rangeeT in [1, 3, 5]:
-                                if (
-                                    directionT,
-                                    rangeeT,
-                                ) != labyTest.get_forbidden_move():
-                                    # On crée une seconde copy pour tester les possibilités du joueur suivant
-                                    labyTest2 = copy.deepcopy(labyTest)
-                                    labyTest2.play_tile(directionT, rangeeT)
-                                    posT = labyTest2.get_coord_current_treasure()
-                                    xJ, yJ = labyTest2.get_coord_player()
-                                    if posT != None:
-                                        xT, yT = posT
-                                        if labyTest2.accessible(xT, yT, xJ, yJ):
-                                            cptCoupGG += 1
-                    if cptCoupGG == 0:
-                        continuer = False
-                    else:
-                        actionsPossible.append(
-                            (nbRotation, direction, rangee, cptCoupGG)
-                        )
-                    nbRotation += 1
-                j += 1
-            i += 1
-        if continuer:
-
-            def getNbCoupGG(elem):
-                return elem[3]
-
-            (nbRotation, direction, rangee, cptCoupGG) = min(
-                actionsPossible, key=getNbCoupGG
-            )
-        return (nbRotation, direction, rangee)
-
-    # Renvoie le chemin de l'IA défensive, utilise la fonction getMeilleurActionDefensive pour recupérer l'action
-    # et getPositionMinDistance pour buger au plus pres de son tresors ( sait on jamais )
-    def getCheminDefensif(self):
-        (nbRotation, direction, rangee) = self.getMeilleurActionDefensive()
-        for i in range(nbRotation):
-            self.rotate_tile()
-        self.play_tile(direction, rangee)
-        xJ, yJ = self.get_coord_player()
-        ((xD, yD), _) = self.getPositionMinDistance(
-            self.get_coord_current_treasure(), (xJ, yJ)
-        )
-        return self.is_accessible(xJ, yJ, xD, yD)
-
 
 # TODO : placer cette fonction ailleurs ?
 def distance(pos1, pos2):
