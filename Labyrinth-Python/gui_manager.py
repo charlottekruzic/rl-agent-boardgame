@@ -14,20 +14,14 @@ class GUI_manager(object):
     def __init__(
         self,
         labyrinthe,
-        model,
-        env,
         prefixeImage="./original_images",
         titre="Labyrinthe",
-        size=(1500, 900),
+        size=(1600, 900),
         couleur=(209, 238, 238),
     ):
-
-        self.rl_model = model
-        self.env = env
-
         self.info_message = None
         self.info_img = None
-        self.labyrinthe : Labyrinthe = labyrinthe
+        self.labyrinthe = labyrinthe
         self.fini = False
         self.text_color = couleur
         self.matrix = labyrinthe.board
@@ -305,6 +299,8 @@ class GUI_manager(object):
         self.info_img = None
 
     def display_playable_tile(self, row_index):
+        if self.labyrinthe.get_current_player_remaining_treasure() == 0:
+            self.display_message(row_index, "Retournez à @img@")
         text_player = "Tuile à insérer :  "
         tile_surface = self.draw_tile_surface(self.labyrinthe.get_tile_to_play())
 
@@ -477,7 +473,6 @@ class GUI_manager(object):
 
             if ev.type == pygame.VIDEORESIZE:
                 self.update_parameters()
-                self.display_game()
 
             if ev.type == KEYDOWN:
                 if ev.key == K_ESCAPE:
@@ -488,20 +483,23 @@ class GUI_manager(object):
                 (x,y) = self.get_case(ev.pos)
                 if x == "T":
                     self.labyrinthe.rotate_tile()
+                    self.display_game()
                 elif x in ["N", "S", "O", "E"]:
                     if self.labyrinthe.is_forbidden_move(x, y):
                         self.info_message = "Coup interdit : mouvement opposé au dernier."
                         self.info_img = []
-                        return self.get_action_phase_insertion()
+                        self.display_game()
                     else:
                         return (None, x, y)
                 elif x != -1:
                     self.info_message = (
-                        "Insérez d'abord la carte avant de bouger."
+                        "Insérez d'abord la carte avant de vous déplacer."
                     )
                     self.info_img = []
+                    self.display_game()
             
-    def get_player_deplacement(self):
+            
+    def get_action_phase_deplacement(self):
         while True: 
             ev = pygame.event.wait()
 
@@ -531,6 +529,7 @@ class GUI_manager(object):
                         "Sélectionnez une case dans le labyrinthe."
                     )
                     self.info_img = []
+                    self.display_game()
 
                 else : 
                     curr_player = self.labyrinthe.get_current_player()
@@ -541,7 +540,7 @@ class GUI_manager(object):
                             "Cette case est inaccessible pour le joueur @img@"
                         )
                         self.info_img = [self.render_text_pawn_surface(curr_player)]
-                        
+                        self.display_game()
                     else:
                         return x, y
 
@@ -553,19 +552,13 @@ class GUI_manager(object):
         self.info_img = [
             self.render_text_pawn_surface(self.labyrinthe.get_current_player())
         ]
-    
-    def display_return_base(self):
-        self.info_message = "Le joueur @img@ a trouvé tous ses trésors, retournez à @img@ pour gagner"
-        self.info_img = [
-            self.render_text_pawn_surface(self.labyrinthe.get_current_player()),
-            self.render_text_base(self.labyrinthe.get_current_player()),
-        ]
+        self.display_game()
         
-    def display_treasure_found(self, t):
+    def display_treasure_found(self, treasure):
         self.info_message = (
             "Le joueur @img@ a trouvé le trésor @img@"
         )
         self.info_img = [
             self.render_text_pawn_surface(self.labyrinthe.get_current_player()),
-            self.render_text_treasure(t),
+            self.render_text_treasure(treasure),
         ]

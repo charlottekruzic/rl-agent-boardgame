@@ -3,7 +3,7 @@ from matrix import DIMENSION, Matrix
 from player import *
 
 NUM_TREASURES = 24
-NUM_TREASURES_PER_PLAYER = 6
+NUM_TREASURES_PER_PLAYER = 1
 
 
 class Labyrinthe(object):
@@ -157,8 +157,8 @@ class Labyrinthe(object):
         else:
             self.phase = 1
 
-    def player_at_start(self):
-        self.get_coord_player() == self.get_current_player_object().get_start_position()
+    def game_over(self):
+        return self.get_current_player_remaining_treasure() == 0 and self.get_coord_player() == self.get_current_player_object().get_start_position()
 
     def next_player(self):
         """change the current player"""

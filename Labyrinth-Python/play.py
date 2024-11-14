@@ -98,7 +98,7 @@ def main():
         theme_directory=theme_directory,
         use_rl_agent=use_rl_agent,
     )
-    jeu.launch()
+    jeu.run()
 
 
 if __name__ == "__main__":
