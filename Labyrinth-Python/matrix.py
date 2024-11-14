@@ -1,4 +1,5 @@
 from tile import Tile
+from collections import deque
 
 DIMENSION = 7
 
@@ -84,3 +85,57 @@ class Matrix(object):
             self.set_value(i, col_index, self.get_value(i - 1, col_index))
         self.set_value(0, col_index, updated_value)
         return ejected_value
+
+    def get_matrice_accessibilite(self, start_x, start_y):
+        """Génère une matrice 7x7 avec des 1 pour les tuiles accessibles depuis la position d'origine (start_x, start_y).
+        
+        Args:
+            start_x (int): Coordonnée x de départ.
+            start_y (int): Coordonnée y de départ.
+
+        Returns:
+            List[List[int]]: Matrice 7x7 représentant les tuiles accessibles (1 = accessible, 0 = inaccessible).
+        """
+        accessible_matrix = [[0 for _ in range(DIMENSION)] for _ in range(DIMENSION)]
+
+        # file pour suivre tuiles visiter
+        visited = set()
+        queue = deque([(start_x, start_y)])
+
+        # marque la tuile de départ 
+        accessible_matrix[start_x][start_y] = 1
+        visited.add((start_x, start_y))
+
+        while queue:
+            x, y = queue.popleft()
+
+            if x > 0 and self.get_value(x, y).can_go_north(self.get_value(x - 1, y)) and (x - 1, y) not in visited:
+                visited.add((x - 1, y))
+                accessible_matrix[x - 1][y] = 1
+                queue.append((x - 1, y))
+
+            if x < DIMENSION - 1 and self.get_value(x, y).can_go_south(self.get_value(x + 1, y)) and (x + 1, y) not in visited:
+                visited.add((x + 1, y))
+                accessible_matrix[x + 1][y] = 1
+                queue.append((x + 1, y))
+
+            if y > 0 and self.get_value(x, y).can_go_west(self.get_value(x, y - 1)) and (x, y - 1) not in visited:
+                visited.add((x, y - 1))
+                accessible_matrix[x][y - 1] = 1
+                queue.append((x, y - 1))
+
+            if y < DIMENSION - 1 and self.get_value(x, y).can_go_east(self.get_value(x, y + 1)) and (x, y + 1) not in visited:
+                visited.add((x, y + 1))
+                accessible_matrix[x][y + 1] = 1
+                queue.append((x, y + 1))
+
+        return accessible_matrix
+    
+    def get_matrice_tuiles(self):
+        """Génère une matrice 7x7 avec les valeurs des tuiles du plateau.
+        
+        Returns:
+            List[List[Tile]]: Matrice 7x7 représentant les tuiles du plateau.
+        """
+        tuiles_matrix = [[self.get_value(i, j).to_char() for j in range(DIMENSION)] for i in range(DIMENSION)]
+        return tuiles_matrix

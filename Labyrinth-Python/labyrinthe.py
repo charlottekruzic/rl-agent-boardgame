@@ -132,11 +132,14 @@ class Labyrinthe(object):
     def get_coord_current_treasure(self) -> tuple:
         """return the coordinates of the current treasure to find for the current player"""
         treasure = self.current_treasure()
+        print("treasure", treasure)
         for i in range(DIMENSION):
             for j in range(DIMENSION):
                 if self.board.get_value(i, j).get_treasure() == treasure:
                     return (i, j)
-        return None
+                
+        assert self.get_current_player_remaining_treasure() == 0, "EXIT"
+        return self.get_current_player_object().get_start_position()
 
     def get_coord_player(self, joueur_id=None) -> tuple:
         """return the coordinates of the current player"""
@@ -148,6 +151,23 @@ class Labyrinthe(object):
                 if self.board.get_value(i, j).has_pawn(joueur_id):
                     return (i, j)
         return None
+    
+    def get_matrice_accessibilite(self):
+        x, y = self.get_coord_player()
+        return self.board.get_matrice_accessibilite(x,y)
+    
+    def get_matrice_tuiles(self):
+        return self.board.get_matrice_tuiles()
+    
+    def get_matrice_positions(self):
+        position_matrix = [[0 for _ in range(7)] for _ in range(7)]
+        player_x, player_y = self.coords_current_player
+        position_matrix[player_x][player_y] = 1
+        x, y = self.get_coord_current_treasure()
+        print("x, y", x, y)
+        position_matrix[x][y] = 2
+        return position_matrix
+
 
     def next_phase(self):
         """change the phase of the game"""
@@ -358,6 +378,10 @@ class Labyrinthe(object):
                         val = matTest.get_value(x, y)
             chemin.reverse()
             return chemin
+        
+    def get_treasure_observation(self):
+        """return the observation of the current player"""
+        return self.players.get_treasure_observation(self.current_player)
 
 # TODO : placer cette fonction ailleurs ?
 def distance(pos1, pos2):
