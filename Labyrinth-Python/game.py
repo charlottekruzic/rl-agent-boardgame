@@ -25,10 +25,6 @@ class GameEngine(gym.Env):
             2 <= self.human_players + self.ia_number <= 4
         ), "La somme de joueurs humains et IA doit être entre 2 et 4"
 
-        self.current_phase = 0  # Phase initiale (rotation+insertion)
-
-
-
         # 1. Définition de l'espace d'actions pour la phase de rotation et insertion
         # - 4 directions de rotation
         # - 12 insertions possibles (sans l'insertion invalide)
@@ -61,6 +57,7 @@ class GameEngine(gym.Env):
         self.labyrinthe : Labyrinthe = Labyrinthe(
             num_human_players=self.human_players, num_ai_players=self.ia_number
         )
+        self.current_phase = 0  # Phase initiale (rotation+insertion)
         self.coords_current_player = self.labyrinthe.coords_current_player
         self.gui = GUI_manager(self.labyrinthe, self.theme_directory)
         return self.get_observation()
@@ -68,6 +65,8 @@ class GameEngine(gym.Env):
     def get_observation(self):
         # 1. matrice d'accessibilité
         access = self.labyrinthe.get_matrice_accessibilite()
+
+        # TODO : ajouter toutes les tuiles accessibles du plateau
         
         # 2. matrice tuiles 
         tile_matrix = self.labyrinthe.get_matrice_tuiles()
@@ -87,7 +86,7 @@ class GameEngine(gym.Env):
             rotate, insert = divmod(action, 12)  # Séparer rotation et insertion
             for _ in range(rotate):
                 self.labyrinthe.rotate_tile()
-            x_insert, y_insert = insert ???
+            x_insert, y_insert = insert # wip ???
             # TODO urgent
 
             # print pour debug
