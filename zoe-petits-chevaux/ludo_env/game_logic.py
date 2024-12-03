@@ -3,7 +3,7 @@ import numpy as np
 
 from ludo_env.action import Action_NO_EXACT, Action_EXACT
 from ludo_env.state import State_NO_EXACT, State_EXACT
-from ludo_env.reward import DEFAULT_ACTION_ORDER, REWARD_TABLE_MOVE_OUT_EXACT, REWARD_TABLE_MOVE_OUT_NO_EXACT
+from ludo_env.reward import get_reward_table,     get_default_action_order
 
 BOARD_SIZE = 56
 SAFE_ZONE_SIZE = 6
@@ -691,9 +691,7 @@ class GameLogic:
 
 
     def get_reward(self, action): 
-        if self.get_action() == Action_NO_EXACT:
-            return REWARD_TABLE_MOVE_OUT_NO_EXACT[action]
-        return REWARD_TABLE_MOVE_OUT_EXACT[action]
+        return get_reward_table(self.mode_pied_escalier)
 
     # ------------------ Fonctions d'affichage ------------------
 
@@ -791,7 +789,7 @@ class GameLogic:
         return str_game_overview
 
     def debug_action(self, encoded_valid_actions):
-        for action in DEFAULT_ACTION_ORDER:
+        for action in get_default_action_order(self.nb_chevaux, self.mode_pied_escalier):
             if action in encoded_valid_actions:
                 return action
 
