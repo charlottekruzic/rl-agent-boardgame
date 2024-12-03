@@ -579,9 +579,11 @@ class GameLogic:
         for p in player_order:
             for j in range(1, 57):
                 for _ in range(self.board[p][j]):
-                    # Calcul de l'indice
-                    indice = ((i * 28) + j - 1) % 56
-                    chemin[indice].append(p)
+                    relative_position = self.get_relative_position(
+                        p, perspective_player, j
+                    )
+                    relative_position_chemin = relative_position - 1
+                    chemin[relative_position_chemin].append(p)
             i = (i + 1) % self.num_players
 
         return chemin
