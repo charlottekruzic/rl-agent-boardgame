@@ -6,7 +6,7 @@ from ludo_env.game_logic import (
     TOTAL_SIZE,
     BOARD_SIZE,
 )
-from ludo_env.action import Action
+from ludo_env.action import Action_NO_EXACT_MATCH, Action_EXACT_MATCH_REQUIRED
 from ludo_env.renderer import Renderer
 
 
@@ -16,8 +16,10 @@ class LudoEnv(gym.Env):
         num_players,
         nb_chevaux,
         mode_fin_partie="tous_pions",
+        mode_pied_escalier= "not_exact_match",
 
         mode_gym="entrainement",
+
 
         with_render=False,
     ):
@@ -31,6 +33,10 @@ class LudoEnv(gym.Env):
             "entrainement",
             "jeu",
         ], "Only 'entrainement' or 'jeu' are allowed"
+        assert mode_pied_escalier in [
+            "exact_match",
+            "not_exact_match",
+        ], "Only 'exact_match' or 'not_exact_match' are allowed"
 
         super(LudoEnv, self).__init__()
         self.metadata = {"render.modes": ["human", "rgb_array"], "render_fps": 10}
@@ -40,6 +46,7 @@ class LudoEnv(gym.Env):
         self.num_players = num_players
         self.nb_chevaux = nb_chevaux
         self.mode_fin_partie = mode_fin_partie
+        self.mode_pied_escalier = mode_pied_escalier
 
         self.board_size = 56  # TODO delete
         self.safe_zone_size = 6  # TODO delete
@@ -47,9 +54,14 @@ class LudoEnv(gym.Env):
         if self.with_render:
             self.renderer = Renderer()
 
-        self.action_space = gym.spaces.Discrete(
-            3 + self.nb_chevaux * (len(Action) - 3)
-        )  # 1 NO_ACTION + 1 MOVE_OUT + 1 MOVE_OUT_AND_KILl 
+        if mode_pied_escalier == "not_exact_match":
+            self.action_space = gym.spaces.Discrete(
+                3 + self.nb_chevaux * (len(Action_NO_EXACT_MATCH) - 3)
+            )
+        elif mode_pied_escalier == "exact_match":
+            self.action_space = gym.spaces.Discrete(
+                3 + self.nb_chevaux * (len(Action_EXACT_MATCH_REQUIRED) - 3)
+            )
 
         self.observation_space = gym.spaces.Dict(
             {
@@ -108,6 +120,7 @@ class LudoEnv(gym.Env):
             num_players=self.num_players,
             nb_chevaux=self.nb_chevaux,
             mode_fin_partie=self.mode_fin_partie,
+            mode_pied_escalier=self.mode_pied_escalier,
         )
         self.dice_roll = self.game.dice_generator()
         return self._get_observation(), {}
@@ -132,9 +145,15 @@ class LudoEnv(gym.Env):
         encoded_valid_actions = self.game.encode_valid_actions(valid_actions)
         if action not in encoded_valid_actions:
             if self.mode_gym == "jeu":
-                print(
-                        f"ACTION INTERDITE : {Action(action%len(Action))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
-                )
+                if self.mode_pied_escaler == "exact_match":
+                    print(
+                        f"ACTION INTERDITE : {Action_EXACT_MATCH_REQUIRED(action%len(Action_EXACT_MATCH_REQUIRED))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
+                    )
+                elif self.mode_pied_escaler == "not_exact_match":
+                    print(
+                        f"ACTION INTERDITE : {Action_NO_EXACT_MATCH(action%len(Action_NO_EXACT_MATCH))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
+                    )
+
                 action = self.game.debug_action(encoded_valid_actions)
                 pawn_id, action_type = self.game.decode_action(action)
                 print("debug : ", action, pawn_id, action_type)

@@ -1,18 +1,33 @@
-from ludo_env.action import Action
+from ludo_env.action import Action_NO_EXACT_MATCH, Action_EXACT_MATCH_REQUIRED
 
 REWARD_TABLE_MOVE_OUT = {
-    Action.NO_ACTION: -1,
-    Action.MOVE_OUT: 20,
-    Action.MOVE_OUT_AND_KILL: 10,
-    Action.MOVE_FORWARD: 5,
-    Action.ENTER_SAFEZONE: 15,
-    Action.MOVE_IN_SAFE_ZONE: 1,
-    Action.REACH_GOAL: 10,
-    Action.KILL: 30,
+    Action_NO_EXACT_MATCH.NO_ACTION: -1,
+    Action_NO_EXACT_MATCH.MOVE_OUT: 20,
+    Action_NO_EXACT_MATCH.MOVE_OUT_AND_KILL: 10,
+    Action_NO_EXACT_MATCH.MOVE_FORWARD: 5,
+    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 15,
+    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT_MATCH.REACH_GOAL: 10,
+    Action_NO_EXACT_MATCH.KILL: 30,
     # Action.PROTECT: 20,
     #
     # Action.DIE: -20 # TODO -> reward pas d'action enfaite, on le subit pendant un tour
 }  # faudrait que les sommes répartis soient égales
+
+REWARD_TABLE_MOVE_OUT_EXACT_MATCH = {
+    Action_EXACT_MATCH_REQUIRED.NO_ACTION: -1,
+    Action_EXACT_MATCH_REQUIRED.MOVE_OUT: 20,
+    Action_EXACT_MATCH_REQUIRED.MOVE_OUT_AND_KILL: 10,
+
+    Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD: 5,
+    Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER: 15,
+    Action_EXACT_MATCH_REQUIRED.AVANCE_RECULE_PIED_ESCALIER: 1,
+    Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE: 1,
+
+    Action_EXACT_MATCH_REQUIRED.REACH_GOAL: 10,
+    Action_EXACT_MATCH_REQUIRED.KILL: 30,
+}
+
 
 DEFAULT_ACTION_ORDER = {
     0,  # ça veut dire rien de possible
@@ -45,25 +60,25 @@ agent 6 : aime protéger ses pions # TODO : à implémenter quand on aura les ac
 # faire en sorte d'avoir des fonctions pour nb joueurs / nb chevaux
 
 AGENT_0_REWARD_TABLE = {
-    Action.NO_ACTION: -1,
-    Action.MOVE_OUT: 1,
-    Action.MOVE_FORWARD: 1,
-    Action.ENTER_SAFEZONE: 1,
-    Action.MOVE_IN_SAFE_ZONE: 1,
-    Action.REACH_GOAL: 1,
-    Action.KILL: 1,
+    Action_NO_EXACT_MATCH.NO_ACTION: -1,
+    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
+    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
+    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT_MATCH.REACH_GOAL: 1,
+    Action_NO_EXACT_MATCH.KILL: 1,
 }
 
 # TODO : si agent 0 : faire un random pour order
 
 AGENT_1_REWARD_TABLE = {
-    Action.NO_ACTION: -1,
-    Action.MOVE_OUT: 10,
-    Action.MOVE_FORWARD: 1,
-    Action.ENTER_SAFEZONE: 1,
-    Action.MOVE_IN_SAFE_ZONE: 1,
-    Action.REACH_GOAL: 5,
-    Action.KILL: 0,
+    Action_NO_EXACT_MATCH.NO_ACTION: -1,
+    Action_NO_EXACT_MATCH.MOVE_OUT: 10,
+    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
+    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT_MATCH.REACH_GOAL: 5,
+    Action_NO_EXACT_MATCH.KILL: 0,
 }
 
 AGENT_1_DEFAULT_ACTION_ORDER = {
@@ -73,13 +88,13 @@ AGENT_1_DEFAULT_ACTION_ORDER = {
 }
 
 AGENT_2_REWARD_TABLE = {
-    Action.NO_ACTION: -1,
-    Action.MOVE_OUT: 1,
-    Action.MOVE_FORWARD: 10,
-    Action.ENTER_SAFEZONE: 1,
-    Action.MOVE_IN_SAFE_ZONE: 1,
-    Action.REACH_GOAL: 5,
-    Action.KILL: 0,
+    Action_NO_EXACT_MATCH.NO_ACTION: -1,
+    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
+    Action_NO_EXACT_MATCH.MOVE_FORWARD: 10,
+    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT_MATCH.REACH_GOAL: 5,
+    Action_NO_EXACT_MATCH.KILL: 0,
 }
 
 AGENT_2_DEFAULT_ACTION_ORDER = {
@@ -92,31 +107,31 @@ AGENT_2_DEFAULT_ACTION_ORDER = {
 }
 
 AGENT_3_REWARD_TABLE = {
-    Action.NO_ACTION: -1,
-    Action.MOVE_OUT: 1,
-    Action.MOVE_FORWARD: 1,
-    Action.ENTER_SAFEZONE: 1,
-    Action.MOVE_IN_SAFE_ZONE: 1,
-    Action.REACH_GOAL: 1,
-    Action.KILL: 10,
+    Action_NO_EXACT_MATCH.NO_ACTION: -1,
+    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
+    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
+    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT_MATCH.REACH_GOAL: 1,
+    Action_NO_EXACT_MATCH.KILL: 10,
 }
 
 AGENT_4_REWARD_TABLE = {
-    Action.NO_ACTION: -1,
-    Action.MOVE_OUT: 1,
-    Action.MOVE_FORWARD: 1,
-    Action.ENTER_SAFEZONE: 10,
-    Action.MOVE_IN_SAFE_ZONE: 1,
-    Action.REACH_GOAL: 5,
-    Action.KILL: 0,
+    Action_NO_EXACT_MATCH.NO_ACTION: -1,
+    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
+    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
+    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 10,
+    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT_MATCH.REACH_GOAL: 5,
+    Action_NO_EXACT_MATCH.KILL: 0,
 }
 
 AGENT_5_REWARD_TABLE = {
-    Action.NO_ACTION: 10,
-    Action.MOVE_OUT: 1,
-    Action.MOVE_FORWARD: 1,
-    Action.ENTER_SAFEZONE: 1,
-    Action.MOVE_IN_SAFE_ZONE: 1,
-    Action.REACH_GOAL: 1,
-    Action.KILL: 1,
+    Action_NO_EXACT_MATCH.NO_ACTION: 10,
+    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
+    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
+    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT_MATCH.REACH_GOAL: 1,
+    Action_NO_EXACT_MATCH.KILL: 1,
 }

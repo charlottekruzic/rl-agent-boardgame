@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Action(Enum):
+class Action_NO_EXACT_MATCH(Enum):
     NO_ACTION = 0
     MOVE_OUT = 1  # Sortir de la maison
     MOVE_OUT_AND_KILL = 2  # Sortir de la maison et tuer un pion adverse
@@ -12,6 +12,17 @@ class Action(Enum):
     REACH_GOAL = 6  # Atteindre l'objectif final
     KILL = 7  # Tuer un pion adverse
 
-    # TODO :
-    # REACH PIED ESCALIER
-    # ESCALADER à la place de move in safe zone mais comment faire comprendre si 1 2 3 4 5 ou 6
+
+class Action_EXACT_MATCH_REQUIRED(Enum):
+    NO_ACTION = 0
+    MOVE_OUT = 1 
+    MOVE_OUT_AND_KILL = 2  
+
+    MOVE_FORWARD = 3  
+    REACH_PIED_ESCALIER = 4  
+    AVANCE_RECULE_PIED_ESCALIER = 5
+
+    MOVE_IN_SAFE_ZONE = 6
+    REACH_GOAL = 7
+
+    KILL = 8

@@ -1,5 +1,5 @@
 import pytest
-from ludo_env import LudoEnv, GameLogic,  Action
+from ludo_env import LudoEnv, GameLogic,  Action_NO_EXACT_MATCH
 
 @pytest.fixture
 def setup_env():
@@ -35,7 +35,7 @@ def test_not_double_me_basic(setup_env):
     print(env.game.board)
     env.dice_roll = 5
 
-    action = env.game.encode_action(0, Action.MOVE_FORWARD)
+    action = env.game.encode_action(0, Action_NO_EXACT_MATCH.MOVE_FORWARD)
     env.step(action)
 
     print(env.game.board)
@@ -55,7 +55,7 @@ def test_not_double_opponent_basic(setup_env):
 
     env.dice_roll = 5
 
-    action = env.game.encode_action(1, Action.MOVE_FORWARD)
+    action = env.game.encode_action(1, Action_NO_EXACT_MATCH.MOVE_FORWARD)
     env.step(action)
 
     assert env.game.board[0][9] == 0, "Le pion devrait être bloqué avant la case occupée par un pion adverse."
@@ -71,7 +71,7 @@ def test_blocked_near_escalier_NORMAL_FAILED(setup_env):
 
     env.dice_roll = 3
 
-    action = env.game.encode_action(0, Action.MOVE_FORWARD)
+    action = env.game.encode_action(0, Action_NO_EXACT_MATCH.MOVE_FORWARD)
     env.step(action)
 
     assert env.game.board[0][57] == 0, "Le pion devrait être bloqué avant l'escalier."
@@ -91,7 +91,7 @@ def test_multiple_blocking_pawns(setup_env):
 
     env.dice_roll = 5
 
-    action = env.game.encode_action(1, Action.MOVE_FORWARD)
+    action = env.game.encode_action(1, Action_NO_EXACT_MATCH.MOVE_FORWARD)
     env.step(action)
 
     assert env.game.board[0][8] == 0, "Le pion devrait être bloqué par le premier pion adverse."
@@ -114,7 +114,7 @@ def test_jump_and_hit_second_opponent(setup_env):
 
     print(env.game.board)
 
-    action = env.game.encode_action(1, Action.MOVE_FORWARD)
+    action = env.game.encode_action(1, Action_NO_EXACT_MATCH.MOVE_FORWARD)
     env.step(action)
 
     print(env.game.board)
@@ -134,7 +134,7 @@ def test_recoil_stops_at_start(setup_env):
 
     env.dice_roll = 6
 
-    action = env.game.encode_action(1, Action.MOVE_FORWARD)
+    action = env.game.encode_action(1, Action_NO_EXACT_MATCH.MOVE_FORWARD)
     env.step(action)
 
     assert env.game.board[0][1] == 1, "Le pion doit s'arrêter à la case 1."
@@ -142,8 +142,8 @@ def test_recoil_stops_at_start(setup_env):
 
 
 def test_no_overtake_8(game_4chevaux):
-    assert game_4chevaux.get_valid_actions(0, 1) == [[Action.MOVE_FORWARD], [Action.MOVE_FORWARD], [Action.KILL], [Action.MOVE_IN_SAFE_ZONE], False]
-    assert game_4chevaux.get_valid_actions(1, 1) == [[], [Action.KILL], [Action.ENTER_SAFEZONE], [Action.MOVE_IN_SAFE_ZONE], False]
+    assert game_4chevaux.get_valid_actions(0, 1) == [[Action_NO_EXACT_MATCH.MOVE_FORWARD], [Action_NO_EXACT_MATCH.MOVE_FORWARD], [Action_NO_EXACT_MATCH.KILL], [Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE], False]
+    assert game_4chevaux.get_valid_actions(1, 1) == [[], [Action_NO_EXACT_MATCH.KILL], [Action_NO_EXACT_MATCH.ENTER_SAFEZONE], [Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE], False]
     
     # assert game_4chevaux.get_valid_actions(0, 2) == [[Action.MOVE_FORWARD], [Action.MOVE_FORWARD], [Action.KILL], [Action.MOVE FORWARD ET BACKWARD NON ?], False]
     # TODO
