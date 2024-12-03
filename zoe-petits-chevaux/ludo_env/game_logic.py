@@ -209,63 +209,6 @@ class GameLogic:
             board[1:43] = path_board[14:]
         return board
 
-    """
-    AFFICHAGE CHARLOTTE (NE PAS EFFACER MERCI)
-
-    def get_instruction_for_player(self, player_id, dice_roll):
-        str_instruction = f"Joueur {player_id} : \n"
-
-        valid_actions = self.get_valid_actions(player_id, dice_roll)
-        encoded_valid_actions = self.encode_valid_actions(valid_actions)
-
-        if 0 in encoded_valid_actions:
-            str_instruction += "0 : ne rien faire\n"
-        if 1 in encoded_valid_actions:
-            str_instruction += "1 : sortir pion\n"
-
-        infos = self.get_pawns_info(player_id)
-
-        for i in range(len(infos)):
-            str_instruction += f"pion {i} case {infos[i]['position']}\n"
-            if self.encode_action(i, Action.MOVE_FORWARD) in encoded_valid_actions:
-                str_instruction += f"{2 + i * 5} : avancer pion {i}\n"
-            if self.encode_action(i, Action.ENTER_SAFEZONE) in encoded_valid_actions:
-                str_instruction += f"{3 + i * 5} : entrer escalier pion {i}\n"
-            if self.encode_action(i, Action.MOVE_IN_SAFE_ZONE) in encoded_valid_actions:
-                str_instruction += f"{4 + i * 5} : avancer dans escalier pion {i}\n"
-            if self.encode_action(i, Action.REACH_GOAL) in encoded_valid_actions:
-                str_instruction += f"{5 + i * 5} : atteindre objectif pion {i}\n"
-            if self.encode_action(i, Action.KILL) in encoded_valid_actions:
-                str_instruction += f"{6 + i * 5} : tuer adversaire pion {i}\n"
-
-        return str_instruction
-
-
-
-
-
-    """
-
-    def get_instruction_for_player(self, player_id, dice_roll):
-        str_instruction = ""
-        str_instruction += f"Joueur {player_id} : \n"
-        str_instruction += "0 : ne rien faire\n"
-        str_instruction += "1 : sortir pion\n"
-        infos = self.get_pawns_info(player_id)
-        str_instruction += f"pion 0 case {infos[0]['position']}\n"
-        str_instruction += "2 : avancer pion 0\n"
-        str_instruction += "3 : entrer escalier pion 0\n"
-        str_instruction += "4 : avancer dans escalier pion 0\n"
-        str_instruction += "5 : atteindre objectif pion 0\n"
-        str_instruction += "6 : tuer adversaire pion 0\n"
-        str_instruction += f"pion 1 case {infos[1]['position']}\n"
-        str_instruction += "7 : avancer pion 1\n"
-        str_instruction += "8 : entrer escalier pion 1\n"
-        str_instruction += "9 : avancer dans escalier pion 1\n"
-        str_instruction += "10 : atteindre objectif pion 1\n"
-        str_instruction += "11 : tuer adversaire pion 1\n"
-        return str_instruction
-
     def dice_generator(self):
         valeur = np.random.randint(1, 7)  # TODO : fix avec une seed pour les tests
         return valeur
@@ -384,33 +327,33 @@ class GameLogic:
             self.board[player_id][old_position] > 0
         ), "Pas de pion à déplacer à cette position"
 
-        target_position = old_position + dice_value
-        chemin_observation = self.get_observation_my_chemin(player_id)
-        print(f"Chemin observation : {chemin_observation}")
+        # target_position = old_position + dice_value
+        # chemin_observation = self.get_observation_my_chemin(player_id)
+        # print(f"Chemin observation : {chemin_observation}")
         
-        # TODO : Mettre un if ici si on veut autoriser le doublement
-        # Empêcher de doubler un pion et reculer
-        for position in range(old_position + 1, min(target_position + 1, 57)):
-            #print(f"Position : {position}")
-            #print(f"chemin_observation[position] : {chemin_observation[position]}")
-            if chemin_observation[position-1] == -1 or chemin_observation[position-1] == 1:
-                print(f"Target : {target_position}")
-                #if position == target_position and other_player != player_id:
-                #    print(f"KILL possible à la position {position}")
-                #    break
-                #else:
-                new_position = 2*position - dice_value - old_position
-                #print(f"Chemin bloqué par un pion à la position {position}")
-                if new_position < 1:
-                    new_position = 1
+        # # TODO : Mettre un if ici si on veut autoriser le doublement
+        # # Empêcher de doubler un pion et reculer
+        # for position in range(old_position + 1, min(target_position + 1, 57)):
+        #     #print(f"Position : {position}")
+        #     #print(f"chemin_observation[position] : {chemin_observation[position]}")
+        #     if chemin_observation[position-1] == -1 or chemin_observation[position-1] == 1:
+        #         print(f"Target : {target_position}")
+        #         #if position == target_position and other_player != player_id:
+        #         #    print(f"KILL possible à la position {position}")
+        #         #    break
+        #         #else:
+        #         new_position = 2*position - dice_value - old_position
+        #         #print(f"Chemin bloqué par un pion à la position {position}")
+        #         if new_position < 1:
+        #             new_position = 1
 
-                self.board[player_id][old_position] -= 1
-                self.board[player_id][new_position] += 1
-                return
+        #         self.board[player_id][old_position] -= 1
+        #         self.board[player_id][new_position] += 1
+        #         return
 
-        # TODO : Gérer le cas quand un joueur est entre un pion et l'escalier
-        # et que le pion a un dé le faisant arriver après l'escalier
-        # --> le code doit être changer dans les actions possibles
+        # # TODO : Gérer le cas quand un joueur est entre un pion et l'escalier
+        # # et que le pion a un dé le faisant arriver après l'escalier
+        # # --> le code doit être changer dans les actions possibles
 
         assert old_position + dice_value < 57, "Déplacement pas conforme à la position"
         self.board[player_id][old_position] -= 1
@@ -443,6 +386,24 @@ class GameLogic:
         self.board[player_id][old_position] -= 1
         self.board[player_id][-1] += 1
 
+    def is_there_pawn_to_kill(self, player_id, old_position, target_position):
+        for other_player in range(self.num_players):
+            if other_player != player_id:
+                relative_position = self.get_relative_position(
+                    player_id, other_player, target_position
+                )
+                if self.board[other_player][relative_position] > 0:
+                    return True
+        return False
+
+    def is_there_pawn_between_my_position_and_target_position(self, player_id, old_position, target_position):
+        # TODO : mettre un if si on veut autoriser le doublement ici par exemple ?
+        # TODO le représenter sous une autre forme d'action ?
+        for pos in range(old_position + 1, target_position):
+            if self.is_opponent_pawn_on(player_id, pos) or self.board[player_id][pos] > 0:
+                return True
+        return False
+
     def move_pawn(self, player_id, old_position, dice_value, action):
         if self.get_action() == Action_NO_EXACT_MATCH:
             if action == Action_NO_EXACT_MATCH.MOVE_OUT:
@@ -470,16 +431,18 @@ class GameLogic:
             elif action == Action_EXACT_MATCH_REQUIRED.MOVE_OUT_AND_KILL:
                 self.kill_pawn(player_id, 1)
                 self.sortir_pion(player_id, dice_value)
-            elif action == Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD or action == Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER:
-                self.avance_pion_path(player_id, old_position, dice_value)
 
+            elif action == Action_EXACT_MATCH_REQUIRED.KILL: # avant au cas où kill / reach pied dans meme cas 
+                self.kill_pawn(player_id, old_position + dice_value)
+                self.avance_pion_path(player_id, old_position, dice_value)
+            elif action == Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD or action == Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER:
+                # TODO ZOE : tester si il faut kill 
+                self.kill_pawn(player_id, old_position + dice_value)
+                self.avance_pion_path(player_id, old_position, dice_value)
             elif action == Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE:
                 self.avance_recule(player_id, old_position, dice_value)
             elif action == Action_EXACT_MATCH_REQUIRED.REACH_GOAL:
                 self.securise_pion_goal(player_id, old_position, dice_value)
-            elif action == Action_EXACT_MATCH_REQUIRED.KILL:
-                self.kill_pawn(player_id, old_position + dice_value)
-                self.avance_pion_path(player_id, old_position, dice_value)
             elif action == Action_EXACT_MATCH_REQUIRED.NO_ACTION:
                 pass
             else:
@@ -505,6 +468,13 @@ class GameLogic:
 
             elif state == State_NO_EXACT_MATCH.CHEMIN:
                 if target_position < 57:  # limite avant zone protégée
+
+                    # VERSION OÙ ON BOUGE PAS SI Y A QUELQU'UN SUR NOTRE CHEMIN
+                    obstacle = self.is_there_pawn_between_my_position_and_target_position(player_id, position, target_position)
+                    if not obstacle: 
+                        valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+
+                    # TODO ZOE : VERSION OÙ ON SE MET JUSTE DERRIERE SI Y A UN OBSTACLE 
 
                     # TODO : mettre un if si on veut autoriser le doublement
                     is_blocked = False
@@ -596,9 +566,8 @@ class GameLogic:
                     else:
                         if self.is_opponent_pawn_on(player_id, target_position):
                             valid_actions.append(Action_EXACT_MATCH_REQUIRED.KILL)
-                        else:
-                            if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                                valid_actions.append(Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER)
+                        if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
+                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER)
 
                 else: # > 56 
                     is_blocked = False
