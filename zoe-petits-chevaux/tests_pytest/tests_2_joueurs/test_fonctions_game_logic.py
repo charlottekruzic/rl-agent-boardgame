@@ -32,7 +32,6 @@ def game_4chevaux():
     return game
 
 
-
 def test_get_relative_position_0(game_4chevaux):
     assert game_4chevaux.get_relative_position(0, 1, 1) == 29
     assert game_4chevaux.get_relative_position(0, 1, 14) == 42
@@ -177,3 +176,4 @@ def test_get_observation_my_chemin(game_4chevaux):
                 ]
     assert game_4chevaux.get_observation_my_chemin(0) == resultat_0
     assert game_4chevaux.get_observation_my_chemin(1) == resultat_1 
+

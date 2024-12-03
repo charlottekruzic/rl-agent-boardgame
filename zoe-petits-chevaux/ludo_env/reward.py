@@ -1,6 +1,6 @@
 from ludo_env.action import Action_NO_EXACT_MATCH, Action_EXACT_MATCH_REQUIRED
 
-REWARD_TABLE_MOVE_OUT = {
+REWARD_TABLE_MOVE_OUT_NO_EXACT_MATCH = {
     Action_NO_EXACT_MATCH.NO_ACTION: -1,
     Action_NO_EXACT_MATCH.MOVE_OUT: 20,
     Action_NO_EXACT_MATCH.MOVE_OUT_AND_KILL: 10,
@@ -22,7 +22,7 @@ REWARD_TABLE_MOVE_OUT_EXACT_MATCH = {
     Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD: 5,
     Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER: 15,
     Action_EXACT_MATCH_REQUIRED.AVANCE_RECULE_PIED_ESCALIER: 1,
-    Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE: 1,
+    Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE: 5,
 
     Action_EXACT_MATCH_REQUIRED.REACH_GOAL: 10,
     Action_EXACT_MATCH_REQUIRED.KILL: 30,
@@ -42,8 +42,9 @@ DEFAULT_ACTION_ORDER = {
     7,  # avancer
     4,
     9,  # avancer dans la safezone
+    12, 13, 14, 15, # TODO à voir 
 }
-
+## TODO ZOE : générer liste automatique en fonction du contexte 
 
 ## WIP : TODO les différents agents 
 '''

@@ -65,17 +65,6 @@ class LudoEnv(gym.Env):
 
         self.observation_space = gym.spaces.Dict(
             {
-                # "my_board": gym.spaces.Box(
-                #     low=0, high=self.nb_chevaux, shape=(TOTAL_SIZE,), dtype=np.int8
-                # ),  # État du plateau du joueur courant
-                # # "my_chemin_with_adversaires": gym.spaces.Box(
-                # #     low=0,
-                # #     high=self.nb_chevaux * (self.num_players - 1),
-                # #     shape=(BOARD_SIZE,),
-                # #     dtype=np.int8,
-                # # ),  # Agrégation des autres joueurs selon quel pdv ? TODO
-                # "dice_roll": gym.spaces.Discrete(7),  # Résultat du dé (1 à 6)
-
                 "my_ecurie" : gym.spaces.Discrete(self.nb_chevaux + 1),
                 # État de l'écurie du joueur courant
 
@@ -98,13 +87,6 @@ class LudoEnv(gym.Env):
 
     def _get_observation(self):
         obs = {
-            # "my_board": self.game.board[self.current_player],
-            # # "my_chemin_with_adversaires": self.game.get_opponent_positions_on_my_board(
-            # #     self.current_player
-            # # ),  # TODO : ici ça ne fonctionne que quand self.num_players = 2, on a pas encore testé pour plus
-            # # TODO je crois qu'on retournne pas ce qu'il fait pour les plateaux des adversaires : on veut les adversaires sur NOTRE plateau
-            # "dice_roll": self.dice_roll,
-
             "my_ecurie" : self.game.get_observation_my_ecurie(self.current_player),
             "my_chemin" : self.game.get_observation_my_chemin(self.current_player),
             "my_escalier" : self.game.get_observation_my_escalier(self.current_player),

@@ -3,7 +3,7 @@ import numpy as np
 
 from ludo_env.action import Action_NO_EXACT_MATCH, Action_EXACT_MATCH_REQUIRED
 from ludo_env.state import State_NO_EXACT_MATCH, State_EXACT_MATCH_REQUIRED
-from ludo_env.reward import REWARD_TABLE_MOVE_OUT, DEFAULT_ACTION_ORDER
+from ludo_env.reward import DEFAULT_ACTION_ORDER, REWARD_TABLE_MOVE_OUT_EXACT_MATCH, REWARD_TABLE_MOVE_OUT_NO_EXACT_MATCH
 
 BOARD_SIZE = 56
 SAFE_ZONE_SIZE = 6
@@ -127,8 +127,7 @@ class GameLogic:
         return str_game_overview
 
     def get_opponent_positions_on_my_board(self, player_id):
-        # TODO : multi joueurs
-        # TODO : tests sur ça en 2 3 et 4 joueurs
+        # TODO TEST 
         assert (
             self.num_players == 2
         ), "fonction get_opponent_positions_on_my_board pas implémenté pour plus de joueur"
@@ -150,7 +149,6 @@ class GameLogic:
             else self.get_chemin_pdv(player_id)
         )
         for i in range(56 // 14):
-            # print(i * 14 + 1, " -> ", (i + 1) * 14)
             str_game_overview += f"{chemin[i * 14 : (i + 1) * 14]}\n"
 
         for i in range(self.num_players):
@@ -215,7 +213,7 @@ class GameLogic:
 
     def get_pawns_on_position(
         self, player_id, target_position_relative
-    ):  # TODO check cette fonction pour multi joueurs
+    ):  # TODO TEST multijoueurs 3 4 
         if player_id == 0:
             indice = target_position_relative - 1
         elif player_id == 2:
@@ -244,18 +242,18 @@ class GameLogic:
                     return True
         return False
 
-    def is_pawn_threatened(
-        self, player, position
-    ):  # si un pion est menacé par un autre pion adverse -> quelquun dans les 6 cases avant (HOME d'un autre joueur compte)
-        # TODO
-        # retourne combien de pions sont menacés ?
-        return False
+    # def is_pawn_threatened(
+    #     self, player, position
+    # ):  # si un pion est menacé par un autre pion adverse -> quelquun dans les 6 cases avant (HOME d'un autre joueur compte)
+    #     # TODO
+    #     # retourne combien de pions sont menacés ?
+    #     return False
 
-    def is_pawn_protected(
-        self, player, position
-    ):  # si un pion est protégé par un autre pion allié -> quelquun dans les 6 cases avant (HOME d'un autre joueur compte)
-        # TODO
-        return False
+    # def is_pawn_protected(
+    #     self, player, position
+    # ):  # si un pion est protégé par un autre pion allié -> quelquun dans les 6 cases avant (HOME d'un autre joueur compte)
+    #     # TODO
+    #     return False
 
     # Savoir la position d'un joueur dans la perspective d'un autre joueur
     def get_relative_position(self, from_player, to_player, position):
@@ -361,11 +359,11 @@ class GameLogic:
 
     def avance_recule(self, player_id, old_position, dice_value):
         # TODO : assert personne sur le chemin devant moi 
-        assert old_position + dice_value < 57, "Déplacement pas conforme à la position"
+        assert old_position + dice_value > 56, "Déplacement pas conforme à la position"
         get_distance_avant = 56 - old_position
         recule_de = dice_value - get_distance_avant
         get_position_apres = 56 - recule_de
-        assert old_position <= get_position_apres, "Déplacement pas conforme à la position"
+        assert old_position < get_position_apres, f"Déplacement pas conforme à la position, {old_position} < {get_position_apres}, dice_value : {dice_value}"
         # TODO ZOE TEST il manque des assert + mettre des tests sur les actions possibles 
         self.board[player_id][old_position] -= 1
         self.board[player_id][get_position_apres] += 1
@@ -398,7 +396,7 @@ class GameLogic:
 
     def is_there_pawn_between_my_position_and_target_position(self, player_id, old_position, target_position):
         # TODO : mettre un if si on veut autoriser le doublement ici par exemple ?
-        # TODO le représenter sous une autre forme d'action ?
+        # TODO branch sur GET STUCK
         for pos in range(old_position + 1, target_position):
             if self.is_opponent_pawn_on(player_id, pos) or self.board[player_id][pos] > 0:
                 return True
@@ -432,15 +430,18 @@ class GameLogic:
                 self.kill_pawn(player_id, 1)
                 self.sortir_pion(player_id, dice_value)
 
-            elif action == Action_EXACT_MATCH_REQUIRED.KILL: # avant au cas où kill / reach pied dans meme cas 
+            elif action == Action_EXACT_MATCH_REQUIRED.KILL: 
                 self.kill_pawn(player_id, old_position + dice_value)
                 self.avance_pion_path(player_id, old_position, dice_value)
             elif action == Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD or action == Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER:
-                # TODO ZOE : tester si il faut kill 
+                # TODO ZOE : tester si il faut kill parce que c'est une action aussi 
                 self.kill_pawn(player_id, old_position + dice_value)
+
                 self.avance_pion_path(player_id, old_position, dice_value)
-            elif action == Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE:
+            elif action == Action_EXACT_MATCH_REQUIRED.AVANCE_RECULE_PIED_ESCALIER:
                 self.avance_recule(player_id, old_position, dice_value)
+            elif action == Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE:
+                self.avance_pion_safe_zone(player_id, old_position, dice_value)
             elif action == Action_EXACT_MATCH_REQUIRED.REACH_GOAL:
                 self.securise_pion_goal(player_id, old_position, dice_value)
             elif action == Action_EXACT_MATCH_REQUIRED.NO_ACTION:
@@ -465,54 +466,61 @@ class GameLogic:
                     else: 
                         if self.board[player_id][1] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas sortir un autre
                             valid_actions.append(Action_NO_EXACT_MATCH.MOVE_OUT)
-
+            
             elif state == State_NO_EXACT_MATCH.CHEMIN:
                 if target_position < 57:  # limite avant zone protégée
-
-                    # VERSION OÙ ON BOUGE PAS SI Y A QUELQU'UN SUR NOTRE CHEMIN
-                    obstacle = self.is_there_pawn_between_my_position_and_target_position(player_id, position, target_position)
-                    if not obstacle: 
-                        valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
-
-                    # TODO ZOE : VERSION OÙ ON SE MET JUSTE DERRIERE SI Y A UN OBSTACLE 
-
-                    # TODO : mettre un if si on veut autoriser le doublement
-                    is_blocked = False
-                    for pos in range(position + 1, target_position):
-                        if self.is_opponent_pawn_on(player_id, pos) or self.board[player_id][pos] > 0:
-                            is_blocked = True
-                            break
-
-                    if is_blocked:
-                        valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+                    if self.is_opponent_pawn_on(player_id, target_position):
+                        valid_actions.append(Action_NO_EXACT_MATCH.KILL)
                     else:
-                        if self.is_opponent_pawn_on(player_id, target_position):
-                            valid_actions.append(Action_NO_EXACT_MATCH.KILL)
-                        else:
-                            if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                                valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+                        if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
+                            valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+
+                    # # VERSION OÙ ON BOUGE PAS SI Y A QUELQU'UN SUR NOTRE CHEMIN
+                    # obstacle = self.is_there_pawn_between_my_position_and_target_position(player_id, position, target_position)
+                    # if not obstacle: 
+                    #     valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+
+                    # # TODO ZOE : VERSION OÙ ON SE MET JUSTE DERRIERE SI Y A UN OBSTACLE 
+
+                    # # TODO : mettre un if si on veut autoriser le doublement
+                    # is_blocked = False
+                    # for pos in range(position + 1, target_position):
+                    #     if self.is_opponent_pawn_on(player_id, pos) or self.board[player_id][pos] > 0:
+                    #         is_blocked = True
+                    #         break
+
+                    # if is_blocked:
+                    #     valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+                    # else:
+                    #     if self.is_opponent_pawn_on(player_id, target_position):
+                    #         valid_actions.append(Action_NO_EXACT_MATCH.KILL)
+                    #     else:
+                    #         if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
+                    #             valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
 
                 elif target_position >= 57:
-                    #print("DEPASSEMENT DE L'ESCALIER")
-                    # TODO : mettre un if si on veut autoriser le doublement
-                    is_blocked = False
-                    for pos in range(position + 1, min(target_position, 57)):
-                        if self.board[player_id][pos] > 0:
-                            is_blocked = True
-                            break
+                    valid_actions.append(Action_NO_EXACT_MATCH.ENTER_SAFEZONE)
 
-                    if is_blocked:
-                        valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
-                    else:
-                        valid_actions.append(Action_NO_EXACT_MATCH.ENTER_SAFEZONE)
-                
-                # TODO : empecher de doubler 
-                # TODO ajouter ces moves là
-                # if self.is_opponent_pawn_on(player_id, position+dice_value):
-                #     valid_actions.append(Action.KILL)
-                # if self.is_pawn_protected(player_id, position + dice_value): # on peut reward ça aussi
-                #     valid_actions.append(Action.PROTECT)
-                # TODO faire changer la regle : je peux avoir moi plusieurs fois sur la meme case : PROTECT 
+                        # #print("DEPASSEMENT DE L'ESCALIER")
+                        # # TODO : mettre un if si on veut autoriser le doublement
+                        # is_blocked = False
+                        # for pos in range(position + 1, min(target_position, 57)):
+                        #     if self.board[player_id][pos] > 0:
+                        #         is_blocked = True
+                        #         break
+
+                        # if is_blocked:
+                        #     valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+                        # else:
+                        #     valid_actions.append(Action_NO_EXACT_MATCH.ENTER_SAFEZONE)
+                    
+                    # TODO : empecher de doubler 
+                    # TODO ajouter ces moves là
+                    # if self.is_opponent_pawn_on(player_id, position+dice_value):
+                    #     valid_actions.append(Action.KILL)
+                    # if self.is_pawn_protected(player_id, position + dice_value): # on peut reward ça aussi
+                    #     valid_actions.append(Action.PROTECT)
+                    # TODO faire changer la regle : je peux avoir moi plusieurs fois sur la meme case : PROTECT 
 
             elif state == State_NO_EXACT_MATCH.ESCALIER:
                 if target_position <= 62:
@@ -526,71 +534,45 @@ class GameLogic:
 
         elif self.get_state() == State_EXACT_MATCH_REQUIRED and self.get_action() == Action_EXACT_MATCH_REQUIRED:
             if state == State_EXACT_MATCH_REQUIRED.ECURIE:
-                    if dice_value == 6:
-                        if self.is_opponent_pawn_on(player_id, 1): 
-                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_OUT_AND_KILL)
-                        else: 
-                            if self.board[player_id][1] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas sortir un autre
-                                valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_OUT)
+                if dice_value == 6:
+                    if self.is_opponent_pawn_on(player_id, 1): 
+                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_OUT_AND_KILL)
+                    else: 
+                        if self.board[player_id][1] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas sortir un autre
+                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_OUT)
 
             elif state == State_EXACT_MATCH_REQUIRED.CHEMIN:
                 # TODO ZOE : si quelquun sur la route alors je suis bloquée dans tous les cas 
                 if target_position < 56: 
-                    # TODO : mettre un if si on veut autoriser le doublement
-                    is_blocked = False
-                    for pos in range(position + 1, target_position):
-                        if self.is_opponent_pawn_on(player_id, pos) or self.board[player_id][pos] > 0:
-                            is_blocked = True
-                            break
-
-                    if is_blocked:
-                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD)
+                    if self.is_opponent_pawn_on(player_id, target_position):
+                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.KILL)
                     else:
-                        if self.is_opponent_pawn_on(player_id, target_position):
-                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.KILL)
-                        else:
-                            if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                                valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD)
-
-
+                        if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
+                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD)
 
                 elif target_position == 56:
-                    is_blocked = False
-                    for pos in range(position + 1, target_position):
-                        if self.is_opponent_pawn_on(player_id, pos) or self.board[player_id][pos] > 0:
-                            is_blocked = True
-                            break
 
-                    if is_blocked:
-                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD) # TODO ZOE TEST si moi ou autre me gene sur la route -> pas possible
+                    if self.is_opponent_pawn_on(player_id, target_position):
+                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.KILL)
                     else:
-                        if self.is_opponent_pawn_on(player_id, target_position):
-                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.KILL)
                         if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
                             valid_actions.append(Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER)
 
                 else: # > 56 
-                    is_blocked = False
-                    for pos in range(position + 1, 57):
-                        if self.is_opponent_pawn_on(player_id, pos) or self.board[player_id][pos] > 0:
-                            is_blocked = True
-                            break
-
-                    # si entre nous et 56 y a un adversaire
-                    if is_blocked:
-                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD) # TODO ZOE TEST si moi ou autre me gene sur la route -> pas possible
-                    else:
-                        # là on sait qu'entre nous et 56 il n'y a personne 
-                        distance_avant = 56 - position
-                        recule_de = dice_value - distance_avant
-                        position_apres = 56 - recule_de
-                        if position_apres >= position:
-                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.AVANCE_RECULE_PIED_ESCALIER)
+                    distance_avant = 56 - position
+                    recule_de = dice_value - distance_avant
+                    position_apres = 56 - recule_de
+                    if position_apres > position:
+                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.AVANCE_RECULE_PIED_ESCALIER)
+                    # pas de kill.... il peut y avoir plusieurs pions sur la même case
+                    # TODO ZOE : regles
+                    # TODO DOUBLE
 
             elif state == State_EXACT_MATCH_REQUIRED.PIED_ESCALIER:
-                if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                    valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE)
+                valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE)
+                # on a le droit d'avoir plusieurs pions sur la même case dans l'escalier 
 
+                # TODO DOUBLE 
                 # TODO ZOE ICI MONTER DE L'ESCALIER : ENTER_SAFEZONE FAIRE 1 PUIS 2 3 4 5 6 et enfin re 6 ou peu importe 
                 # OU ALORS : ENTER SAFE ZONE et MOVE IN SAFE ZONE ... -> autres actions 
 
@@ -709,7 +691,9 @@ class GameLogic:
 
 
     def get_reward(self, action): 
-        return REWARD_TABLE_MOVE_OUT[action]
+        if self.get_action() == Action_NO_EXACT_MATCH:
+            return REWARD_TABLE_MOVE_OUT_NO_EXACT_MATCH[action]
+        return REWARD_TABLE_MOVE_OUT_EXACT_MATCH[action]
 
     # ------------------ Fonctions d'affichage ------------------
 
@@ -766,9 +750,7 @@ class GameLogic:
                     # Calcul de l'indice selon l'ordre des joueurs et l'offset
                     chemin[relative_position_chemin].append(p)
             i = (i + 1) % self.num_players
-
-        # TODO : vérifier ça fonctionnel
-
+        # TODO TEST 
         return chemin
 
     def get_chemin_pdv_2_joueurs(self, perspective_player):
@@ -816,7 +798,6 @@ class GameLogic:
     # TODO : ajouter une fonction pour se voir avec son POV + 1 pour ses joueur, 0 pour les autres,
     # # où du moins avec un plateau sans mes pions mais où je vois où sont tous les autres par rapport à ma vision
 
-
     def get_observation_my_ecurie(self, player_id) -> int:
         return self.board[player_id][0]
     
@@ -828,7 +809,7 @@ class GameLogic:
 
         result = [0 for _ in range(56)]
         for i in range(56):
-            assert len(chemin[i]) <= 1, "Erreur dans la logique du jeu"
+            # assert len(chemin[i]) <= 1, "Erreur dans la logique du jeu" TODO : doubler, avancer reculer sans kill 
             if player_id in chemin[i]:
                 result[i] = 1
             else :
