@@ -6,7 +6,7 @@ from ludo_env.game_logic import (
     TOTAL_SIZE,
     BOARD_SIZE,
 )
-from ludo_env.action import Action_NO_EXACT_MATCH, Action_EXACT_MATCH_REQUIRED
+from ludo_env.action import Action_NO_EXACT, Action_EXACT
 from ludo_env.renderer import Renderer
 
 
@@ -15,8 +15,8 @@ class LudoEnv(gym.Env):
         self,
         num_players,
         nb_chevaux,
-        mode_fin_partie="tous_pions",
-        mode_pied_escalier= "not_exact_match",
+        mode_fin_partie="tous",
+        mode_pied_escalier= "not_exact",
 
         mode_gym="entrainement",
 
@@ -26,17 +26,17 @@ class LudoEnv(gym.Env):
         assert num_players in [2, 3, 4], "Only 2, 3 or 4 players are allowed"
         assert nb_chevaux in [2, 3, 4], "Only 2, 3 or 4 pawns are allowed"
         assert mode_fin_partie in [
-            "tous_pions",
-            "un_pion",
-        ], "Only 'tous_pions' or 'un_pion' are allowed"
+            "tous",
+            "un",
+        ], "Only 'tous' or 'un' are allowed"
         assert mode_gym in [
             "entrainement",
             "jeu",
         ], "Only 'entrainement' or 'jeu' are allowed"
         assert mode_pied_escalier in [
-            "exact_match",
-            "not_exact_match",
-        ], "Only 'exact_match' or 'not_exact_match' are allowed"
+            "exact",
+            "not_exact",
+        ], "Only 'exact' or 'not_exact' are allowed"
 
         super(LudoEnv, self).__init__()
         self.metadata = {"render.modes": ["human", "rgb_array"], "render_fps": 10}
@@ -54,13 +54,13 @@ class LudoEnv(gym.Env):
         if self.with_render:
             self.renderer = Renderer()
 
-        if mode_pied_escalier == "not_exact_match":
+        if mode_pied_escalier == "not_exact":
             self.action_space = gym.spaces.Discrete(
-                3 + self.nb_chevaux * (len(Action_NO_EXACT_MATCH) - 3)
+                3 + self.nb_chevaux * (len(Action_NO_EXACT) - 3)
             )
-        elif mode_pied_escalier == "exact_match":
+        elif mode_pied_escalier == "exact":
             self.action_space = gym.spaces.Discrete(
-                3 + self.nb_chevaux * (len(Action_EXACT_MATCH_REQUIRED) - 3)
+                3 + self.nb_chevaux * (len(Action_EXACT) - 3)
             )
 
         self.observation_space = gym.spaces.Dict(
@@ -127,13 +127,13 @@ class LudoEnv(gym.Env):
         encoded_valid_actions = self.game.encode_valid_actions(valid_actions)
         if action not in encoded_valid_actions:
             if self.mode_gym == "jeu":
-                if self.mode_pied_escaler == "exact_match":
+                if self.mode_pied_escaler == "exact":
                     print(
-                        f"ACTION INTERDITE : {Action_EXACT_MATCH_REQUIRED(action%len(Action_EXACT_MATCH_REQUIRED))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
+                        f"ACTION INTERDITE : {Action_EXACT(action%len(Action_EXACT))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
                     )
-                elif self.mode_pied_escaler == "not_exact_match":
+                elif self.mode_pied_escaler == "not_exact":
                     print(
-                        f"ACTION INTERDITE : {Action_NO_EXACT_MATCH(action%len(Action_NO_EXACT_MATCH))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
+                        f"ACTION INTERDITE : {Action_NO_EXACT(action%len(Action_NO_EXACT))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
                     )
 
                 action = self.game.debug_action(encoded_valid_actions)

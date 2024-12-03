@@ -1,9 +1,9 @@
 # ce fichier gère toute la logique du jeu / les règles du jeu
 import numpy as np
 
-from ludo_env.action import Action_NO_EXACT_MATCH, Action_EXACT_MATCH_REQUIRED
-from ludo_env.state import State_NO_EXACT_MATCH, State_EXACT_MATCH_REQUIRED
-from ludo_env.reward import DEFAULT_ACTION_ORDER, REWARD_TABLE_MOVE_OUT_EXACT_MATCH, REWARD_TABLE_MOVE_OUT_NO_EXACT_MATCH
+from ludo_env.action import Action_NO_EXACT, Action_EXACT
+from ludo_env.state import State_NO_EXACT, State_EXACT
+from ludo_env.reward import DEFAULT_ACTION_ORDER, REWARD_TABLE_MOVE_OUT_EXACT, REWARD_TABLE_MOVE_OUT_NO_EXACT
 
 BOARD_SIZE = 56
 SAFE_ZONE_SIZE = 6
@@ -11,7 +11,7 @@ TOTAL_SIZE = BOARD_SIZE + SAFE_ZONE_SIZE + 2  # HOME + GOAL
 
 
 class GameLogic:
-    def __init__(self, num_players, nb_chevaux, mode_fin_partie="tous_pions", mode_pied_escalier="not_exact_match"):
+    def __init__(self, num_players, nb_chevaux, mode_fin_partie="tous", mode_pied_escalier="not_exact"):
         self.num_players = num_players
         self.nb_chevaux = nb_chevaux
         self.mode_fin_partie = mode_fin_partie
@@ -19,18 +19,18 @@ class GameLogic:
         self.init_board()
 
     def get_state(self):
-        if self.mode_pied_escalier == "not_exact_match":
-            return State_NO_EXACT_MATCH
-        elif self.mode_pied_escalier == "exact_match":
-            return State_EXACT_MATCH_REQUIRED
+        if self.mode_pied_escalier == "not_exact":
+            return State_NO_EXACT
+        elif self.mode_pied_escalier == "exact":
+            return State_EXACT
         else:
             raise ValueError("Mode de pied d'escalier non supporté")
         
     def get_action(self):
-        if self.mode_pied_escalier == "not_exact_match":
-            return Action_NO_EXACT_MATCH
-        elif self.mode_pied_escalier == "exact_match":
-            return Action_EXACT_MATCH_REQUIRED
+        if self.mode_pied_escalier == "not_exact":
+            return Action_NO_EXACT
+        elif self.mode_pied_escalier == "exact":
+            return Action_EXACT
         else:
             raise ValueError("Mode de pied d'escalier non supporté")
 
@@ -290,11 +290,11 @@ class GameLogic:
         """
         Vérifie si un joueur a remporté la partie.
         """
-        if self.mode_fin_partie == "tous_pions":
+        if self.mode_fin_partie == "tous":
             for player_id in range(self.num_players):
                 if self.board[player_id][-1] == self.nb_chevaux:
                     return player_id
-        elif self.mode_fin_partie == "un_pion":
+        elif self.mode_fin_partie == "un":
             for player_id in range(self.num_players):
                 if self.board[player_id][-1] == 1:
                     return player_id
@@ -403,48 +403,48 @@ class GameLogic:
         return False
 
     def move_pawn(self, player_id, old_position, dice_value, action):
-        if self.get_action() == Action_NO_EXACT_MATCH:
-            if action == Action_NO_EXACT_MATCH.MOVE_OUT:
+        if self.get_action() == Action_NO_EXACT:
+            if action == Action_NO_EXACT.MOVE_OUT:
                 self.sortir_pion(player_id, dice_value)
-            elif action == Action_NO_EXACT_MATCH.MOVE_OUT_AND_KILL:
+            elif action == Action_NO_EXACT.MOVE_OUT_AND_KILL:
                 self.kill_pawn(player_id, 1)
                 self.sortir_pion(player_id, dice_value)
-            elif action == Action_NO_EXACT_MATCH.MOVE_FORWARD:
+            elif action == Action_NO_EXACT.MOVE_FORWARD:
                 self.avance_pion_path(player_id, old_position, dice_value)
-            elif action == Action_NO_EXACT_MATCH.ENTER_SAFEZONE or action == Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE:
+            elif action == Action_NO_EXACT.ENTER_SAFEZONE or action == Action_NO_EXACT.MOVE_IN_SAFE_ZONE:
                 self.avance_pion_safe_zone(player_id, old_position, dice_value)
-            elif action == Action_NO_EXACT_MATCH.REACH_GOAL:
+            elif action == Action_NO_EXACT.REACH_GOAL:
                 self.securise_pion_goal(player_id, old_position, dice_value)
-            elif action == Action_NO_EXACT_MATCH.KILL:
+            elif action == Action_NO_EXACT.KILL:
                 self.kill_pawn(player_id, old_position + dice_value)
                 self.avance_pion_path(player_id, old_position, dice_value)
-            elif action == Action_NO_EXACT_MATCH.NO_ACTION:
+            elif action == Action_NO_EXACT.NO_ACTION:
                 pass
             else:
                 raise ValueError("Action non valide")
             
-        elif self.get_action() == Action_EXACT_MATCH_REQUIRED:
-            if action == Action_EXACT_MATCH_REQUIRED.MOVE_OUT:
+        elif self.get_action() == Action_EXACT:
+            if action == Action_EXACT.MOVE_OUT:
                 self.sortir_pion(player_id, dice_value)
-            elif action == Action_EXACT_MATCH_REQUIRED.MOVE_OUT_AND_KILL:
+            elif action == Action_EXACT.MOVE_OUT_AND_KILL:
                 self.kill_pawn(player_id, 1)
                 self.sortir_pion(player_id, dice_value)
 
-            elif action == Action_EXACT_MATCH_REQUIRED.KILL: 
+            elif action == Action_EXACT.KILL: 
                 self.kill_pawn(player_id, old_position + dice_value)
                 self.avance_pion_path(player_id, old_position, dice_value)
-            elif action == Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD or action == Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER:
+            elif action == Action_EXACT.MOVE_FORWARD or action == Action_EXACT.REACH_PIED_ESCALIER:
                 # TODO ZOE : tester si il faut kill parce que c'est une action aussi 
                 self.kill_pawn(player_id, old_position + dice_value)
 
                 self.avance_pion_path(player_id, old_position, dice_value)
-            elif action == Action_EXACT_MATCH_REQUIRED.AVANCE_RECULE_PIED_ESCALIER:
+            elif action == Action_EXACT.AVANCE_RECULE_PIED_ESCALIER:
                 self.avance_recule(player_id, old_position, dice_value)
-            elif action == Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE:
+            elif action == Action_EXACT.MOVE_IN_SAFE_ZONE:
                 self.avance_pion_safe_zone(player_id, old_position, dice_value)
-            elif action == Action_EXACT_MATCH_REQUIRED.REACH_GOAL:
+            elif action == Action_EXACT.REACH_GOAL:
                 self.securise_pion_goal(player_id, old_position, dice_value)
-            elif action == Action_EXACT_MATCH_REQUIRED.NO_ACTION:
+            elif action == Action_EXACT.NO_ACTION:
                 pass
             else:
                 raise ValueError("Action non valide")
@@ -458,27 +458,27 @@ class GameLogic:
         target_position = position + dice_value
 
         valid_actions = []
-        if self.get_state() == State_NO_EXACT_MATCH and self.get_action() == Action_NO_EXACT_MATCH:
-            if state == State_NO_EXACT_MATCH.ECURIE:
+        if self.get_state() == State_NO_EXACT and self.get_action() == Action_NO_EXACT:
+            if state == State_NO_EXACT.ECURIE:
                 if dice_value == 6:
                     if self.is_opponent_pawn_on(player_id, 1): 
-                        valid_actions.append(Action_NO_EXACT_MATCH.MOVE_OUT_AND_KILL)
+                        valid_actions.append(Action_NO_EXACT.MOVE_OUT_AND_KILL)
                     else: 
                         if self.board[player_id][1] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas sortir un autre
-                            valid_actions.append(Action_NO_EXACT_MATCH.MOVE_OUT)
+                            valid_actions.append(Action_NO_EXACT.MOVE_OUT)
             
-            elif state == State_NO_EXACT_MATCH.CHEMIN:
+            elif state == State_NO_EXACT.CHEMIN:
                 if target_position < 57:  # limite avant zone protégée
                     if self.is_opponent_pawn_on(player_id, target_position):
-                        valid_actions.append(Action_NO_EXACT_MATCH.KILL)
+                        valid_actions.append(Action_NO_EXACT.KILL)
                     else:
                         if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                            valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+                            valid_actions.append(Action_NO_EXACT.MOVE_FORWARD)
 
                     # # VERSION OÙ ON BOUGE PAS SI Y A QUELQU'UN SUR NOTRE CHEMIN
                     # obstacle = self.is_there_pawn_between_my_position_and_target_position(player_id, position, target_position)
                     # if not obstacle: 
-                    #     valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+                    #     valid_actions.append(Action_NO_EXACT.MOVE_FORWARD)
 
                     # # TODO ZOE : VERSION OÙ ON SE MET JUSTE DERRIERE SI Y A UN OBSTACLE 
 
@@ -490,16 +490,16 @@ class GameLogic:
                     #         break
 
                     # if is_blocked:
-                    #     valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+                    #     valid_actions.append(Action_NO_EXACT.MOVE_FORWARD)
                     # else:
                     #     if self.is_opponent_pawn_on(player_id, target_position):
-                    #         valid_actions.append(Action_NO_EXACT_MATCH.KILL)
+                    #         valid_actions.append(Action_NO_EXACT.KILL)
                     #     else:
                     #         if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                    #             valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+                    #             valid_actions.append(Action_NO_EXACT.MOVE_FORWARD)
 
                 elif target_position >= 57:
-                    valid_actions.append(Action_NO_EXACT_MATCH.ENTER_SAFEZONE)
+                    valid_actions.append(Action_NO_EXACT.ENTER_SAFEZONE)
 
                         # #print("DEPASSEMENT DE L'ESCALIER")
                         # # TODO : mettre un if si on veut autoriser le doublement
@@ -510,9 +510,9 @@ class GameLogic:
                         #         break
 
                         # if is_blocked:
-                        #     valid_actions.append(Action_NO_EXACT_MATCH.MOVE_FORWARD)
+                        #     valid_actions.append(Action_NO_EXACT.MOVE_FORWARD)
                         # else:
-                        #     valid_actions.append(Action_NO_EXACT_MATCH.ENTER_SAFEZONE)
+                        #     valid_actions.append(Action_NO_EXACT.ENTER_SAFEZONE)
                     
                     # TODO : empecher de doubler 
                     # TODO ajouter ces moves là
@@ -522,68 +522,68 @@ class GameLogic:
                     #     valid_actions.append(Action.PROTECT)
                     # TODO faire changer la regle : je peux avoir moi plusieurs fois sur la meme case : PROTECT 
 
-            elif state == State_NO_EXACT_MATCH.ESCALIER:
+            elif state == State_NO_EXACT.ESCALIER:
                 if target_position <= 62:
                     if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                        valid_actions.append(Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE)
+                        valid_actions.append(Action_NO_EXACT.MOVE_IN_SAFE_ZONE)
                 if target_position >= 63:
-                    valid_actions.append(Action_NO_EXACT_MATCH.REACH_GOAL)
+                    valid_actions.append(Action_NO_EXACT.REACH_GOAL)
                     
-            elif state == State_NO_EXACT_MATCH.OBJECTIF:
+            elif state == State_NO_EXACT.OBJECTIF:
                 pass
 
-        elif self.get_state() == State_EXACT_MATCH_REQUIRED and self.get_action() == Action_EXACT_MATCH_REQUIRED:
-            if state == State_EXACT_MATCH_REQUIRED.ECURIE:
+        elif self.get_state() == State_EXACT and self.get_action() == Action_EXACT:
+            if state == State_EXACT.ECURIE:
                 if dice_value == 6:
                     if self.is_opponent_pawn_on(player_id, 1): 
-                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_OUT_AND_KILL)
+                        valid_actions.append(Action_EXACT.MOVE_OUT_AND_KILL)
                     else: 
                         if self.board[player_id][1] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas sortir un autre
-                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_OUT)
+                            valid_actions.append(Action_EXACT.MOVE_OUT)
 
-            elif state == State_EXACT_MATCH_REQUIRED.CHEMIN:
+            elif state == State_EXACT.CHEMIN:
                 # TODO ZOE : si quelquun sur la route alors je suis bloquée dans tous les cas 
                 if target_position < 56: 
                     if self.is_opponent_pawn_on(player_id, target_position):
-                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.KILL)
+                        valid_actions.append(Action_EXACT.KILL)
                     else:
                         if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD)
+                            valid_actions.append(Action_EXACT.MOVE_FORWARD)
 
                 elif target_position == 56:
 
                     if self.is_opponent_pawn_on(player_id, target_position):
-                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.KILL)
+                        valid_actions.append(Action_EXACT.KILL)
                     else:
                         if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                            valid_actions.append(Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER)
+                            valid_actions.append(Action_EXACT.REACH_PIED_ESCALIER)
 
                 else: # > 56 
                     distance_avant = 56 - position
                     recule_de = dice_value - distance_avant
                     position_apres = 56 - recule_de
                     if position_apres > position:
-                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.AVANCE_RECULE_PIED_ESCALIER)
+                        valid_actions.append(Action_EXACT.AVANCE_RECULE_PIED_ESCALIER)
                     # pas de kill.... il peut y avoir plusieurs pions sur la même case
                     # TODO ZOE : regles
                     # TODO DOUBLE
 
-            elif state == State_EXACT_MATCH_REQUIRED.PIED_ESCALIER:
-                valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE)
+            elif state == State_EXACT.PIED_ESCALIER:
+                valid_actions.append(Action_EXACT.MOVE_IN_SAFE_ZONE)
                 # on a le droit d'avoir plusieurs pions sur la même case dans l'escalier 
 
                 # TODO DOUBLE 
                 # TODO ZOE ICI MONTER DE L'ESCALIER : ENTER_SAFEZONE FAIRE 1 PUIS 2 3 4 5 6 et enfin re 6 ou peu importe 
                 # OU ALORS : ENTER SAFE ZONE et MOVE IN SAFE ZONE ... -> autres actions 
 
-            elif state == State_EXACT_MATCH_REQUIRED.ESCALIER:
+            elif state == State_EXACT.ESCALIER:
                 if target_position <= 62:
                     if self.board[player_id][target_position] == 0: # si il y a déjà un de mes chevaux sur la case alors je ne peux pas avancer
-                        valid_actions.append(Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE)
+                        valid_actions.append(Action_EXACT.MOVE_IN_SAFE_ZONE)
                 if target_position >= 63:
-                    valid_actions.append(Action_EXACT_MATCH_REQUIRED.REACH_GOAL)
+                    valid_actions.append(Action_EXACT.REACH_GOAL)
                     
-            elif state == State_EXACT_MATCH_REQUIRED.OBJECTIF:
+            elif state == State_EXACT.OBJECTIF:
                 pass
 
         return valid_actions
@@ -600,40 +600,40 @@ class GameLogic:
                 all_vide = False
             valid_actions[i] = tmp
         if all_vide:
-            if self.get_action() == Action_NO_EXACT_MATCH:
-                valid_actions.append(Action_NO_EXACT_MATCH.NO_ACTION)
-            elif self.get_action() == Action_EXACT_MATCH_REQUIRED:
-                valid_actions.append(Action_EXACT_MATCH_REQUIRED.NO_ACTION)
+            if self.get_action() == Action_NO_EXACT:
+                valid_actions.append(Action_NO_EXACT.NO_ACTION)
+            elif self.get_action() == Action_EXACT:
+                valid_actions.append(Action_EXACT.NO_ACTION)
         else:
             valid_actions.append(False)  # en indice NB_PAWNS
         return valid_actions
 
     def encode_action(self, pawn_id, action_type):
-        if self.get_action() == Action_NO_EXACT_MATCH:    
-            if action_type == Action_NO_EXACT_MATCH.NO_ACTION:
+        if self.get_action() == Action_NO_EXACT:    
+            if action_type == Action_NO_EXACT.NO_ACTION:
                 return 0
-            elif action_type == Action_NO_EXACT_MATCH.MOVE_OUT:
+            elif action_type == Action_NO_EXACT.MOVE_OUT:
                 return 1
-            elif action_type == Action_NO_EXACT_MATCH.MOVE_OUT_AND_KILL:
+            elif action_type == Action_NO_EXACT.MOVE_OUT_AND_KILL:
                 return 2
-            return pawn_id * (len(Action_NO_EXACT_MATCH) - 3) + action_type.value
+            return pawn_id * (len(Action_NO_EXACT) - 3) + action_type.value
         
-        elif self.get_action() == Action_EXACT_MATCH_REQUIRED:
-            if action_type == Action_EXACT_MATCH_REQUIRED.NO_ACTION:
+        elif self.get_action() == Action_EXACT:
+            if action_type == Action_EXACT.NO_ACTION:
                 return 0
-            elif action_type == Action_EXACT_MATCH_REQUIRED.MOVE_OUT:
+            elif action_type == Action_EXACT.MOVE_OUT:
                 return 1
-            elif action_type == Action_EXACT_MATCH_REQUIRED.MOVE_OUT_AND_KILL:
+            elif action_type == Action_EXACT.MOVE_OUT_AND_KILL:
                 return 2
-            return pawn_id * (len(Action_EXACT_MATCH_REQUIRED) - 3) + action_type.value
+            return pawn_id * (len(Action_EXACT) - 3) + action_type.value
         
         else : 
             raise ValueError("Action non valide")
         
 
     def encode_valid_actions(self, valid_actions):
-        if self.get_action() == Action_NO_EXACT_MATCH:
-            if valid_actions[self.nb_chevaux] == Action_NO_EXACT_MATCH.NO_ACTION:
+        if self.get_action() == Action_NO_EXACT:
+            if valid_actions[self.nb_chevaux] == Action_NO_EXACT.NO_ACTION:
                 return [0]
             valid_actions = valid_actions[: self.nb_chevaux]
             encoded_actions = []
@@ -642,8 +642,8 @@ class GameLogic:
                     encoded_actions.append(self.encode_action(i, action))
             return list(set(encoded_actions))
         
-        elif self.get_action() == Action_EXACT_MATCH_REQUIRED:
-            if valid_actions[self.nb_chevaux] == Action_EXACT_MATCH_REQUIRED.NO_ACTION:
+        elif self.get_action() == Action_EXACT:
+            if valid_actions[self.nb_chevaux] == Action_EXACT.NO_ACTION:
                 return [0]
             valid_actions = valid_actions[: self.nb_chevaux]
             encoded_actions = []
@@ -656,44 +656,44 @@ class GameLogic:
             raise ValueError("Action non valide")
 
     def decode_action(self, action):  
-        if self.get_action() == Action_NO_EXACT_MATCH:
+        if self.get_action() == Action_NO_EXACT:
             if action == 0:
-                return 0, Action_NO_EXACT_MATCH.NO_ACTION
+                return 0, Action_NO_EXACT.NO_ACTION
             elif action == 1:
-                return 0, Action_NO_EXACT_MATCH.MOVE_OUT
+                return 0, Action_NO_EXACT.MOVE_OUT
             elif action == 2:
-                return 0, Action_NO_EXACT_MATCH.MOVE_OUT_AND_KILL
+                return 0, Action_NO_EXACT.MOVE_OUT_AND_KILL
             
-            pawn_id = (action - 3) // (len(Action_NO_EXACT_MATCH) - 3)
-            if action < len(Action_NO_EXACT_MATCH):    
+            pawn_id = (action - 3) // (len(Action_NO_EXACT) - 3)
+            if action < len(Action_NO_EXACT):    
                 action_type = action
             else:
-                action_type = (action - 3) % (len(Action_NO_EXACT_MATCH) - 3) + 3
-            return pawn_id, Action_NO_EXACT_MATCH(action_type)
+                action_type = (action - 3) % (len(Action_NO_EXACT) - 3) + 3
+            return pawn_id, Action_NO_EXACT(action_type)
         
-        elif self.get_action() == Action_EXACT_MATCH_REQUIRED:
+        elif self.get_action() == Action_EXACT:
             if action == 0:
-                return 0, Action_EXACT_MATCH_REQUIRED.NO_ACTION
+                return 0, Action_EXACT.NO_ACTION
             elif action == 1:
-                return 0, Action_EXACT_MATCH_REQUIRED.MOVE_OUT
+                return 0, Action_EXACT.MOVE_OUT
             elif action == 2:
-                return 0, Action_EXACT_MATCH_REQUIRED.MOVE_OUT_AND_KILL
+                return 0, Action_EXACT.MOVE_OUT_AND_KILL
             
-            pawn_id = (action - 3) // (len(Action_EXACT_MATCH_REQUIRED) - 3)
-            if action < len(Action_EXACT_MATCH_REQUIRED):    
+            pawn_id = (action - 3) // (len(Action_EXACT) - 3)
+            if action < len(Action_EXACT):    
                 action_type = action
             else:
-                action_type = (action - 3) % (len(Action_EXACT_MATCH_REQUIRED) - 3) + 3
-            return pawn_id, Action_EXACT_MATCH_REQUIRED(action_type)
+                action_type = (action - 3) % (len(Action_EXACT) - 3) + 3
+            return pawn_id, Action_EXACT(action_type)
         
         else :
             raise ValueError("Action non valide")
 
 
     def get_reward(self, action): 
-        if self.get_action() == Action_NO_EXACT_MATCH:
-            return REWARD_TABLE_MOVE_OUT_NO_EXACT_MATCH[action]
-        return REWARD_TABLE_MOVE_OUT_EXACT_MATCH[action]
+        if self.get_action() == Action_NO_EXACT:
+            return REWARD_TABLE_MOVE_OUT_NO_EXACT[action]
+        return REWARD_TABLE_MOVE_OUT_EXACT[action]
 
     # ------------------ Fonctions d'affichage ------------------
 

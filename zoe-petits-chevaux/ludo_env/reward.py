@@ -1,32 +1,42 @@
-from ludo_env.action import Action_NO_EXACT_MATCH, Action_EXACT_MATCH_REQUIRED
+from ludo_env.action import Action_NO_EXACT, Action_EXACT
 
-REWARD_TABLE_MOVE_OUT_NO_EXACT_MATCH = {
-    Action_NO_EXACT_MATCH.NO_ACTION: -1,
-    Action_NO_EXACT_MATCH.MOVE_OUT: 20,
-    Action_NO_EXACT_MATCH.MOVE_OUT_AND_KILL: 10,
-    Action_NO_EXACT_MATCH.MOVE_FORWARD: 5,
-    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 15,
-    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
-    Action_NO_EXACT_MATCH.REACH_GOAL: 10,
-    Action_NO_EXACT_MATCH.KILL: 30,
-    # Action.PROTECT: 20,
-    #
-    # Action.DIE: -20 # TODO -> reward pas d'action enfaite, on le subit pendant un tour
-}  # faudrait que les sommes répartis soient égales
 
-REWARD_TABLE_MOVE_OUT_EXACT_MATCH = {
-    Action_EXACT_MATCH_REQUIRED.NO_ACTION: -1,
-    Action_EXACT_MATCH_REQUIRED.MOVE_OUT: 20,
-    Action_EXACT_MATCH_REQUIRED.MOVE_OUT_AND_KILL: 10,
+# ------------------- REWARD TABLES -------------------
 
-    Action_EXACT_MATCH_REQUIRED.MOVE_FORWARD: 5,
-    Action_EXACT_MATCH_REQUIRED.REACH_PIED_ESCALIER: 15,
-    Action_EXACT_MATCH_REQUIRED.AVANCE_RECULE_PIED_ESCALIER: 1,
-    Action_EXACT_MATCH_REQUIRED.MOVE_IN_SAFE_ZONE: 5,
+REWARD_TABLE_MOVE_OUT_NO_EXACT = {
+    Action_NO_EXACT.NO_ACTION: -1,
+    Action_NO_EXACT.MOVE_OUT: 20,
+    Action_NO_EXACT.MOVE_OUT_AND_KILL: 10,
+    Action_NO_EXACT.MOVE_FORWARD: 5,
+    Action_NO_EXACT.ENTER_SAFEZONE: 15,
+    Action_NO_EXACT.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT.REACH_GOAL: 10,
+    Action_NO_EXACT.KILL: 30,
+}  # TODO faudrait que les sommes répartis soient égales
 
-    Action_EXACT_MATCH_REQUIRED.REACH_GOAL: 10,
-    Action_EXACT_MATCH_REQUIRED.KILL: 30,
+REWARD_TABLE_MOVE_OUT_EXACT = {
+    Action_EXACT.NO_ACTION: -1,
+    Action_EXACT.MOVE_OUT: 20,
+    Action_EXACT.MOVE_OUT_AND_KILL: 10,
+
+    Action_EXACT.MOVE_FORWARD: 5,
+    Action_EXACT.REACH_PIED_ESCALIER: 15,
+    Action_EXACT.AVANCE_RECULE_PIED_ESCALIER: 1,
+    Action_EXACT.MOVE_IN_SAFE_ZONE: 5,
+
+    Action_EXACT.REACH_GOAL: 10,
+    Action_EXACT.KILL: 30,
 }
+
+def get_reward_table(mode_pied_escalier):
+    if mode_pied_escalier == "no_exact":
+        return REWARD_TABLE_MOVE_OUT_NO_EXACT
+    elif mode_pied_escalier == "exact":
+        return REWARD_TABLE_MOVE_OUT_EXACT
+    else:
+        raise ValueError(f"mode_pied_escalier should be 'no_exact' or 'exact', not {mode_pied_escalier}")
+
+# ------------------- DEFAULT ACTION ORDER TABLES -------------------
 
 
 DEFAULT_ACTION_ORDER = {
@@ -61,25 +71,25 @@ agent 6 : aime protéger ses pions # TODO : à implémenter quand on aura les ac
 # faire en sorte d'avoir des fonctions pour nb joueurs / nb chevaux
 
 AGENT_0_REWARD_TABLE = {
-    Action_NO_EXACT_MATCH.NO_ACTION: -1,
-    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
-    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
-    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
-    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
-    Action_NO_EXACT_MATCH.REACH_GOAL: 1,
-    Action_NO_EXACT_MATCH.KILL: 1,
+    Action_NO_EXACT.NO_ACTION: -1,
+    Action_NO_EXACT.MOVE_OUT: 1,
+    Action_NO_EXACT.MOVE_FORWARD: 1,
+    Action_NO_EXACT.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT.REACH_GOAL: 1,
+    Action_NO_EXACT.KILL: 1,
 }
 
 # TODO : si agent 0 : faire un random pour order
 
 AGENT_1_REWARD_TABLE = {
-    Action_NO_EXACT_MATCH.NO_ACTION: -1,
-    Action_NO_EXACT_MATCH.MOVE_OUT: 10,
-    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
-    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
-    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
-    Action_NO_EXACT_MATCH.REACH_GOAL: 5,
-    Action_NO_EXACT_MATCH.KILL: 0,
+    Action_NO_EXACT.NO_ACTION: -1,
+    Action_NO_EXACT.MOVE_OUT: 10,
+    Action_NO_EXACT.MOVE_FORWARD: 1,
+    Action_NO_EXACT.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT.REACH_GOAL: 5,
+    Action_NO_EXACT.KILL: 0,
 }
 
 AGENT_1_DEFAULT_ACTION_ORDER = {
@@ -89,13 +99,13 @@ AGENT_1_DEFAULT_ACTION_ORDER = {
 }
 
 AGENT_2_REWARD_TABLE = {
-    Action_NO_EXACT_MATCH.NO_ACTION: -1,
-    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
-    Action_NO_EXACT_MATCH.MOVE_FORWARD: 10,
-    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
-    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
-    Action_NO_EXACT_MATCH.REACH_GOAL: 5,
-    Action_NO_EXACT_MATCH.KILL: 0,
+    Action_NO_EXACT.NO_ACTION: -1,
+    Action_NO_EXACT.MOVE_OUT: 1,
+    Action_NO_EXACT.MOVE_FORWARD: 10,
+    Action_NO_EXACT.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT.REACH_GOAL: 5,
+    Action_NO_EXACT.KILL: 0,
 }
 
 AGENT_2_DEFAULT_ACTION_ORDER = {
@@ -108,31 +118,31 @@ AGENT_2_DEFAULT_ACTION_ORDER = {
 }
 
 AGENT_3_REWARD_TABLE = {
-    Action_NO_EXACT_MATCH.NO_ACTION: -1,
-    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
-    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
-    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
-    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
-    Action_NO_EXACT_MATCH.REACH_GOAL: 1,
-    Action_NO_EXACT_MATCH.KILL: 10,
+    Action_NO_EXACT.NO_ACTION: -1,
+    Action_NO_EXACT.MOVE_OUT: 1,
+    Action_NO_EXACT.MOVE_FORWARD: 1,
+    Action_NO_EXACT.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT.REACH_GOAL: 1,
+    Action_NO_EXACT.KILL: 10,
 }
 
 AGENT_4_REWARD_TABLE = {
-    Action_NO_EXACT_MATCH.NO_ACTION: -1,
-    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
-    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
-    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 10,
-    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
-    Action_NO_EXACT_MATCH.REACH_GOAL: 5,
-    Action_NO_EXACT_MATCH.KILL: 0,
+    Action_NO_EXACT.NO_ACTION: -1,
+    Action_NO_EXACT.MOVE_OUT: 1,
+    Action_NO_EXACT.MOVE_FORWARD: 1,
+    Action_NO_EXACT.ENTER_SAFEZONE: 10,
+    Action_NO_EXACT.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT.REACH_GOAL: 5,
+    Action_NO_EXACT.KILL: 0,
 }
 
 AGENT_5_REWARD_TABLE = {
-    Action_NO_EXACT_MATCH.NO_ACTION: 10,
-    Action_NO_EXACT_MATCH.MOVE_OUT: 1,
-    Action_NO_EXACT_MATCH.MOVE_FORWARD: 1,
-    Action_NO_EXACT_MATCH.ENTER_SAFEZONE: 1,
-    Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE: 1,
-    Action_NO_EXACT_MATCH.REACH_GOAL: 1,
-    Action_NO_EXACT_MATCH.KILL: 1,
+    Action_NO_EXACT.NO_ACTION: 10,
+    Action_NO_EXACT.MOVE_OUT: 1,
+    Action_NO_EXACT.MOVE_FORWARD: 1,
+    Action_NO_EXACT.ENTER_SAFEZONE: 1,
+    Action_NO_EXACT.MOVE_IN_SAFE_ZONE: 1,
+    Action_NO_EXACT.REACH_GOAL: 1,
+    Action_NO_EXACT.KILL: 1,
 }

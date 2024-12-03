@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class State_NO_EXACT_MATCH(Enum):
+class State_NO_EXACT(Enum):
     ECURIE = 0
     CHEMIN = 1
     ESCALIER = 2
@@ -11,16 +11,16 @@ class State_NO_EXACT_MATCH(Enum):
     def get_state_from_position(relative_position: int):
         assert 0 <= relative_position <= 63, "Position invalide"
         if relative_position == 0:
-            return State_NO_EXACT_MATCH.ECURIE
+            return State_NO_EXACT.ECURIE
         elif relative_position < 57:
-            return State_NO_EXACT_MATCH.CHEMIN
+            return State_NO_EXACT.CHEMIN
         elif relative_position < 63:
-            return State_NO_EXACT_MATCH.ESCALIER
+            return State_NO_EXACT.ESCALIER
         else:
-            return State_NO_EXACT_MATCH.OBJECTIF
+            return State_NO_EXACT.OBJECTIF
 
 
-class State_EXACT_MATCH_REQUIRED(Enum):
+class State_EXACT(Enum):
     ECURIE = 0
     CHEMIN = 1
     PIED_ESCALIER = 2
@@ -31,12 +31,12 @@ class State_EXACT_MATCH_REQUIRED(Enum):
     def get_state_from_position(relative_position: int):
         assert 0 <= relative_position <= 63, "Position invalide"
         if relative_position == 0:
-            return State_EXACT_MATCH_REQUIRED.ECURIE
+            return State_EXACT.ECURIE
         elif relative_position < 56:
-            return State_EXACT_MATCH_REQUIRED.CHEMIN
+            return State_EXACT.CHEMIN
         elif relative_position == 56:
-            return State_EXACT_MATCH_REQUIRED.PIED_ESCALIER
+            return State_EXACT.PIED_ESCALIER
         elif relative_position < 63:
-            return State_EXACT_MATCH_REQUIRED.ESCALIER
+            return State_EXACT.ESCALIER
         else:
-            return State_EXACT_MATCH_REQUIRED.OBJECTIF
+            return State_EXACT.OBJECTIF

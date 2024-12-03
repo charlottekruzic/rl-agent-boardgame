@@ -1,5 +1,5 @@
 # import pytest
-# from ludo_env import LudoEnv, GameLogic,  Action_NO_EXACT_MATCH
+# from ludo_env import LudoEnv, GameLogic,  Action_NO_EXACT
 
 # @pytest.fixture
 # def setup_env():
@@ -35,7 +35,7 @@
 #     print(env.game.board)
 #     env.dice_roll = 5
 
-#     action = env.game.encode_action(0, Action_NO_EXACT_MATCH.MOVE_FORWARD)
+#     action = env.game.encode_action(0, Action_NO_EXACT.MOVE_FORWARD)
 #     env.step(action)
 
 #     print(env.game.board)
@@ -55,7 +55,7 @@
 
 #     env.dice_roll = 5
 
-#     action = env.game.encode_action(1, Action_NO_EXACT_MATCH.MOVE_FORWARD)
+#     action = env.game.encode_action(1, Action_NO_EXACT.MOVE_FORWARD)
 #     env.step(action)
 
 #     assert env.game.board[0][9] == 0, "Le pion devrait être bloqué avant la case occupée par un pion adverse."
@@ -71,7 +71,7 @@
 
 #     env.dice_roll = 3
 
-#     action = env.game.encode_action(0, Action_NO_EXACT_MATCH.MOVE_FORWARD)
+#     action = env.game.encode_action(0, Action_NO_EXACT.MOVE_FORWARD)
 #     env.step(action)
 
 #     assert env.game.board[0][57] == 0, "Le pion devrait être bloqué avant l'escalier."
@@ -91,7 +91,7 @@
 
 #     env.dice_roll = 5
 
-#     action = env.game.encode_action(1, Action_NO_EXACT_MATCH.MOVE_FORWARD)
+#     action = env.game.encode_action(1, Action_NO_EXACT.MOVE_FORWARD)
 #     env.step(action)
 
 #     assert env.game.board[0][8] == 0, "Le pion devrait être bloqué par le premier pion adverse."
@@ -114,7 +114,7 @@
 
 #     print(env.game.board)
 
-#     action = env.game.encode_action(1, Action_NO_EXACT_MATCH.MOVE_FORWARD)
+#     action = env.game.encode_action(1, Action_NO_EXACT.MOVE_FORWARD)
 #     env.step(action)
 
 #     print(env.game.board)
@@ -134,7 +134,7 @@
 
 #     env.dice_roll = 6
 
-#     action = env.game.encode_action(1, Action_NO_EXACT_MATCH.MOVE_FORWARD)
+#     action = env.game.encode_action(1, Action_NO_EXACT.MOVE_FORWARD)
 #     env.step(action)
 
 #     assert env.game.board[0][1] == 1, "Le pion doit s'arrêter à la case 1."
@@ -142,8 +142,8 @@
 
 
 # def test_no_overtake_8(game_4chevaux):
-#     assert game_4chevaux.get_valid_actions(0, 1) == [[Action_NO_EXACT_MATCH.MOVE_FORWARD], [Action_NO_EXACT_MATCH.MOVE_FORWARD], [Action_NO_EXACT_MATCH.KILL], [Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE], False]
-#     assert game_4chevaux.get_valid_actions(1, 1) == [[], [Action_NO_EXACT_MATCH.KILL], [Action_NO_EXACT_MATCH.ENTER_SAFEZONE], [Action_NO_EXACT_MATCH.MOVE_IN_SAFE_ZONE], False]
+#     assert game_4chevaux.get_valid_actions(0, 1) == [[Action_NO_EXACT.MOVE_FORWARD], [Action_NO_EXACT.MOVE_FORWARD], [Action_NO_EXACT.KILL], [Action_NO_EXACT.MOVE_IN_SAFE_ZONE], False]
+#     assert game_4chevaux.get_valid_actions(1, 1) == [[], [Action_NO_EXACT.KILL], [Action_NO_EXACT.ENTER_SAFEZONE], [Action_NO_EXACT.MOVE_IN_SAFE_ZONE], False]
     
 #     # assert game_4chevaux.get_valid_actions(0, 2) == [[Action.MOVE_FORWARD], [Action.MOVE_FORWARD], [Action.KILL], [Action.MOVE FORWARD ET BACKWARD NON ?], False]
 #     # TODO
