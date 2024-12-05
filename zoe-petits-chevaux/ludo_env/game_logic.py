@@ -691,7 +691,8 @@ class GameLogic:
 
 
     def get_reward(self, action): 
-        return get_reward_table(self.mode_pied_escalier)
+        reward_table = get_reward_table(self.mode_pied_escalier)
+        return reward_table[action]
 
     # ------------------ Fonctions d'affichage ------------------
 
