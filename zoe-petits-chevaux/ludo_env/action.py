@@ -28,3 +28,24 @@ class Action_EXACT(Enum):
     REACH_GOAL = 7
 
     KILL = 8
+
+class Action_EXACT_ASCENSION(Enum):
+    NO_ACTION = 0
+    MOVE_OUT = 1 
+    MOVE_OUT_AND_KILL = 2  
+
+    MOVE_FORWARD = 3  
+    KILL = 4
+
+    # MOVE_IN_SAFE_ZONE =
+    REACH_PIED_ESCALIER = 5 
+    AVANCE_RECULE_PIED_ESCALIER = 6 # se rapprocher de 56, si il s'éloigne plus : coup interdit 
+
+    MARCHE_1 = 7
+    MARCHE_2 = 8
+    MARCHE_3 = 9
+    MARCHE_4 = 10
+    MARCHE_5 = 11
+    MARCHE_6 = 12
+
+    REACH_GOAL = 13

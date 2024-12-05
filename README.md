@@ -80,9 +80,28 @@ choisir entre 1 et 2 (exclusif, par défaut 1)
 2. le premier cheval au centre du plateau fait gagner son joueur 
 
 choisir entre 2, 3, 4 (exclusif) (voire plus ?) chevaux par joueur
-3. chaque joueur a 2 chevaux
-4. chaque joueur a 3 chevaux
-5. chaque joueur a 4 chevaux
+2. chaque joueur a 2 chevaux
+3. chaque joueur a 3 chevaux
+4. chaque joueur a 4 chevaux
+5. chaque joueur a 5 chevaux
+6. chaque joueur a 6 chevaux 
 
+choisir entre atteindre exactement le pied de l'escalier pour pouvoir monter ou non 
+0. pas beosin d'atteindre exactement le pied
+1. atteindre exactement le pied de l'escalier (possible que si avec la valeur du dé il se rapproche de l'objectif : TODO gestion si y a un autre joueur à cet endroit là)
 
+si la dernière réponse était 1:
+0. monter de la valeur indiquée (si il fait plus que l'objectif, atteint quand même l'objectif)
+1. monter exactement les marches 1 à 1 (faire 1 pour aller sur la case 1, 2 case 2, 3 case 3...) dans l'ordre et faire un 6 pour atteindre l'objectif 
 
+TODO ZOE 
+si la dernière réponse était 1:
+0. ne rejoue pas à chaque fois qu'il monte d'une marche
+1. rejoue à chaque fois qu'il monte correctement une marche (raccourcir la partie)
+
+TODO 
+gestion doubler ?
+
+attention : dans le chemin : pas 2 pions dans la meme case autorisé (sauf dans le cas avance recule au niveau du pied de l'escalier)
+
+mais dans l'escalier un joueur peut avoir plusieurs pions à la meme case 

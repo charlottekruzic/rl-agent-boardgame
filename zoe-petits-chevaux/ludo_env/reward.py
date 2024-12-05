@@ -1,4 +1,4 @@
-from ludo_env.action import Action_NO_EXACT, Action_EXACT
+from ludo_env.action import Action_NO_EXACT, Action_EXACT, Action_EXACT_ASCENSION
 
 
 # ------------------- REWARD TABLES -------------------
@@ -28,17 +28,40 @@ REWARD_TABLE_MOVE_OUT_EXACT = {
     Action_EXACT.KILL: 30,
 }
 
-def get_reward_table(mode_pied_escalier):
-    if mode_pied_escalier == "not_exact":
+
+REWARD_TABLE_MOVE_OUT_EXACT_ASCENSION = {
+    Action_EXACT_ASCENSION.NO_ACTION: -1,
+    Action_EXACT_ASCENSION.MOVE_OUT: 20,
+    Action_EXACT_ASCENSION.MOVE_OUT_AND_KILL: 10,
+
+    Action_EXACT_ASCENSION.MOVE_FORWARD: 5,
+    Action_EXACT_ASCENSION.REACH_PIED_ESCALIER: 15,
+    Action_EXACT_ASCENSION.AVANCE_RECULE_PIED_ESCALIER: 1,
+
+    Action_EXACT_ASCENSION.MARCHE_1: 5,
+    Action_EXACT_ASCENSION.MARCHE_2: 5,
+    Action_EXACT_ASCENSION.MARCHE_3: 5,
+    Action_EXACT_ASCENSION.MARCHE_4: 5,
+    Action_EXACT_ASCENSION.MARCHE_5: 5,
+    Action_EXACT_ASCENSION.MARCHE_6: 5,
+
+    Action_EXACT_ASCENSION.REACH_GOAL: 10,
+    Action_EXACT_ASCENSION.KILL: 30,
+}
+
+def get_reward_table(mode_pied_escalier, mode_ascension="sans_contrainte"):
+    if mode_ascension == "avec_contrainte":
+        return REWARD_TABLE_MOVE_OUT_EXACT_ASCENSION
+    elif mode_pied_escalier == "not_exact":
         return REWARD_TABLE_MOVE_OUT_NO_EXACT
     elif mode_pied_escalier == "exact":
         return REWARD_TABLE_MOVE_OUT_EXACT
     else:
         raise ValueError(f"mode_pied_escalier should be 'not_exact' or 'exact', not {mode_pied_escalier}")
-
+    
 # ------------------- DEFAULT ACTION ORDER TABLES -------------------
 
-def get_default_action_order(nb_chevaux, mode_pied_escalier):
+def get_default_action_order(nb_chevaux, mode_pied_escalier, mode_ascension="sans_contrainte"):
     # TODO : scénario c'est toujours le premier cheval qui bouge...
 
     result = [0] # commun aux 2 Action 
@@ -64,6 +87,34 @@ def get_default_action_order(nb_chevaux, mode_pied_escalier):
         for i in range(nb_chevaux -1, -1, -1):
             result.append(Action_NO_EXACT.MOVE_FORWARD.value + i*len_ajout)
 
+    elif mode_ascension == "avec_contrainte":
+        len_ajout = len(Action_EXACT_ASCENSION) - 3
+        # puis tuer
+        for i in range(nb_chevaux -1, -1, -1):
+            result.append(Action_EXACT_ASCENSION.KILL.value + i*len_ajout)
+        # puis atteindre objectif
+        for i in range(nb_chevaux -1, -1, -1):
+            result.append(Action_EXACT_ASCENSION.REACH_GOAL.value + i*len_ajout)
+        # 
+        for i in range(nb_chevaux -1, -1, -1):
+            result.append(Action_EXACT_ASCENSION.REACH_PIED_ESCALIER.value + i*len_ajout)
+        # avancer pres du pied
+        for i in range(nb_chevaux -1, -1, -1):
+            result.append(Action_EXACT_ASCENSION.AVANCE_RECULE_PIED_ESCALIER.value + i*len_ajout)
+        # ensuite avancer dans sécurité
+        for i in range(nb_chevaux -1, -1, -1):
+            result.append(Action_EXACT_ASCENSION.MARCHE_1.value + i*len_ajout)
+        # autres marches 
+        for i in range(nb_chevaux -1, -1, -1):
+            result.append(Action_EXACT_ASCENSION.MARCHE_2.value + i*len_ajout)
+            result.append(Action_EXACT_ASCENSION.MARCHE_3.value + i*len_ajout)
+            result.append(Action_EXACT_ASCENSION.MARCHE_4.value + i*len_ajout)
+            result.append(Action_EXACT_ASCENSION.MARCHE_5.value + i*len_ajout)
+            result.append(Action_EXACT_ASCENSION.MARCHE_6.value + i*len_ajout)
+        # enfin juste simplement avancer
+        for i in range(nb_chevaux -1, -1, -1):
+           result.append(Action_EXACT_ASCENSION.MOVE_FORWARD.value + i*len_ajout)        
+
 
     elif mode_pied_escalier == "exact":
         len_ajout = len(Action_EXACT) - 3
@@ -73,7 +124,7 @@ def get_default_action_order(nb_chevaux, mode_pied_escalier):
         # puis atteindre objectif
         for i in range(nb_chevaux -1, -1, -1):
             result.append(Action_EXACT.REACH_GOAL.value + i*len_ajout)
-        # mettre pion en sécurité
+        # 
         for i in range(nb_chevaux -1, -1, -1):
             result.append(Action_EXACT.REACH_PIED_ESCALIER.value + i*len_ajout)
         # avancer pres du pied

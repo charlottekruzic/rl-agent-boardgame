@@ -6,7 +6,7 @@ from ludo_env.game_logic import (
     TOTAL_SIZE,
     BOARD_SIZE,
 )
-from ludo_env.action import Action_NO_EXACT, Action_EXACT
+from ludo_env.action import Action_NO_EXACT, Action_EXACT, Action_EXACT_ASCENSION
 from ludo_env.renderer import Renderer
 
 
@@ -16,6 +16,7 @@ class LudoEnv(gym.Env):
         num_players,
         nb_chevaux,
         mode_fin_partie="tous",
+        mode_ascension="sans_contrainte",
         mode_pied_escalier= "not_exact",
 
         mode_gym="entrainement",
@@ -37,6 +38,14 @@ class LudoEnv(gym.Env):
             "exact",
             "not_exact",
         ], "Only 'exact' or 'not_exact' are allowed"
+        assert mode_ascension in [
+            "avec_contrainte",
+            "sans_contrainte",
+        ], "Only 'avec_contrainte' or 'sans_contrainte' are allowed"
+        assert (mode_ascension == "avec_contrainte" and mode_pied_escalier == "exact") \
+            or (mode_ascension == "sans_contrainte" and mode_pied_escalier == "not_exact")\
+            or (mode_ascension == "sans_contrainte" and mode_pied_escalier == "exact"),\
+        "Only 'avec_contrainte' and 'exact' or 'sans_contrainte' and 'not_exact' or 'sans_contrainte' and 'exact' are allowed"
 
         super(LudoEnv, self).__init__()
         self.metadata = {"render.modes": ["human", "rgb_array"], "render_fps": 10}
@@ -46,6 +55,7 @@ class LudoEnv(gym.Env):
         self.num_players = num_players
         self.nb_chevaux = nb_chevaux
         self.mode_fin_partie = mode_fin_partie
+        self.mode_ascension = mode_ascension
         self.mode_pied_escalier = mode_pied_escalier
 
         self.board_size = 56  # TODO delete
@@ -54,13 +64,19 @@ class LudoEnv(gym.Env):
         if self.with_render:
             self.renderer = Renderer()
 
-        if mode_pied_escalier == "not_exact":
+        if mode_ascension == "sans_contrainte":
+            if mode_pied_escalier == "not_exact":
+                self.action_space = gym.spaces.Discrete(
+                    3 + self.nb_chevaux * (len(Action_NO_EXACT) - 3)
+                )
+            elif mode_pied_escalier == "exact":
+                self.action_space = gym.spaces.Discrete(
+                    3 + self.nb_chevaux * (len(Action_EXACT) - 3)
+                )
+
+        elif mode_ascension == "avec_contrainte":
             self.action_space = gym.spaces.Discrete(
-                3 + self.nb_chevaux * (len(Action_NO_EXACT) - 3)
-            )
-        elif mode_pied_escalier == "exact":
-            self.action_space = gym.spaces.Discrete(
-                3 + self.nb_chevaux * (len(Action_EXACT) - 3)
+                3 + self.nb_chevaux * (len(Action_EXACT_ASCENSION) - 3)
             )
 
         self.observation_space = gym.spaces.Dict(
@@ -127,7 +143,11 @@ class LudoEnv(gym.Env):
         encoded_valid_actions = self.game.encode_valid_actions(valid_actions)
         if action not in encoded_valid_actions:
             if self.mode_gym == "jeu":
-                if self.mode_pied_escaler == "exact":
+                if self.mode_ascension == "avec_contrainte":
+                    print(
+                        f"ACTION INTERDITE : {Action_EXACT_ASCENSION(action%len(Action_EXACT_ASCENSION))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
+                    )
+                elif self.mode_pied_escaler == "exact":
                     print(
                         f"ACTION INTERDITE : {Action_EXACT(action%len(Action_EXACT))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
                     )

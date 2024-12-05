@@ -322,3 +322,49 @@ def test_encode_4chevaux_exact(game_4chevaux_exact):
     assert 24 == game_4chevaux_exact.encode_action(3, Action_EXACT.MOVE_IN_SAFE_ZONE)
     assert 25 == game_4chevaux_exact.encode_action(3, Action_EXACT.REACH_GOAL)
     assert 26 == game_4chevaux_exact.encode_action(3, Action_EXACT.KILL)
+
+
+
+
+
+
+
+# # TODO ZOE TEST 
+
+# @pytest.fixture
+# def game_2chevaux_exact_ascension():
+#     return GameLogic(num_players=2, nb_chevaux=2, mode_pied_escalier="exact", mode_ascension="avec_contrainte")
+
+
+# @pytest.fixture
+# def game_3chevaux_exact_ascension():
+#     return GameLogic(num_players=2, nb_chevaux=3, mode_pied_escalier="exact", mode_ascension="sans_contrainte")
+
+
+# @pytest.fixture
+# def game_4chevaux_exact_ascension():
+#     return GameLogic(num_players=2, nb_chevaux=4, mode_pied_escalier="exact", mode_ascension="sans_contrainte")
+
+
+
+
+
+# def test_decode_2chevaux_exact_ascension(game_2chevaux_exact):
+#     assert False
+
+
+# def test_decode_3chevaux_exact_ascension(game_3chevaux_exact):
+#     assert False
+
+# def test_decode_4chevaux_exact_ascension(game_4chevaux_exact):
+#     assert False
+
+
+# def test_encode_2chevaux_exact_ascension(game_2chevaux_exact):
+#     assert False
+
+# def test_encode_3chevaux_exact_ascension(game_3chevaux_exact):
+#     assert False
+
+# def test_encode_4chevaux_exact_ascension(game_4chevaux_exact):
+#     assert False
