@@ -7,7 +7,7 @@ from ludo_env.game_logic import (
     BOARD_SIZE,
 )
 from ludo_env.action import Action_NO_EXACT, Action_EXACT, Action_EXACT_ASCENSION
-from ludo_env.renderer import Renderer
+# from ludo_env.renderer import Renderer
 
 
 class LudoEnv(gym.Env):
@@ -118,6 +118,7 @@ class LudoEnv(gym.Env):
             num_players=self.num_players,
             nb_chevaux=self.nb_chevaux,
             mode_fin_partie=self.mode_fin_partie,
+            mode_ascension=self.mode_ascension,
             mode_pied_escalier=self.mode_pied_escalier,
         )
         self.dice_roll = self.game.dice_generator()
@@ -146,12 +147,12 @@ class LudoEnv(gym.Env):
                 if self.mode_ascension == "avec_contrainte":
                     print(
                         f"ACTION INTERDITE : {Action_EXACT_ASCENSION(action%len(Action_EXACT_ASCENSION))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
-                    )
-                elif self.mode_pied_escaler == "exact":
+                    ) 
+                elif self.mode_pied_escalier == "exact":
                     print(
                         f"ACTION INTERDITE : {Action_EXACT(action%len(Action_EXACT))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
                     )
-                elif self.mode_pied_escaler == "not_exact":
+                elif self.mode_pied_escalier == "not_exact":
                     print(
                         f"ACTION INTERDITE : {Action_NO_EXACT(action%len(Action_NO_EXACT))} not in valid_actions {valid_actions} : {encoded_valid_actions}"
                     )

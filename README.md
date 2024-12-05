@@ -105,3 +105,8 @@ gestion doubler ?
 attention : dans le chemin : pas 2 pions dans la meme case autorisé (sauf dans le cas avance recule au niveau du pied de l'escalier)
 
 mais dans l'escalier un joueur peut avoir plusieurs pions à la meme case 
+
+TODO gestion protect ?
+on peut autoriser arriver sur meme case si c'est le meme pion
+mais ça ne protege pas
+si quelqu'un arrive dessus : ça kill ?

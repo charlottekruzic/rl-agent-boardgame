@@ -10,7 +10,7 @@ from ludo_env import LudoEnv
 
 env = LudoEnv(
     num_players=2, nb_chevaux=3, mode_gym="jeu", mode_fin_partie="un"
-    , mode_pied_escalier="exact"
+    , mode_pied_escalier="exact", mode_ascension="avec_contrainte"
 )
 
 

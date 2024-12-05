@@ -478,26 +478,26 @@ class GameLogic:
 
             elif action == Action_EXACT_ASCENSION.MARCHE_1:
                 assert dice_value == 1, "Déplacement pas conforme à la position"
-                self.avance_pion_safe_zone(player_id, old_position, dice_value)
+                self.avance_pion_safe_zone(player_id, old_position, 1)
             elif action == Action_EXACT_ASCENSION.MARCHE_2:
                 assert dice_value == 2, "Déplacement pas conforme à la position"
-                self.avance_pion_safe_zone(player_id, old_position, dice_value)
+                self.avance_pion_safe_zone(player_id, old_position, 1)
             elif action == Action_EXACT_ASCENSION.MARCHE_3:
                 assert dice_value == 3, "Déplacement pas conforme à la position"
-                self.avance_pion_safe_zone(player_id, old_position, dice_value)
+                self.avance_pion_safe_zone(player_id, old_position, 1)
             elif action == Action_EXACT_ASCENSION.MARCHE_4:
                 assert dice_value == 4, "Déplacement pas conforme à la position"
-                self.avance_pion_safe_zone(player_id, old_position, dice_value)
+                self.avance_pion_safe_zone(player_id, old_position, 1)
             elif action == Action_EXACT_ASCENSION.MARCHE_5:
                 assert dice_value == 5, "Déplacement pas conforme à la position"
-                self.avance_pion_safe_zone(player_id, old_position, dice_value)
+                self.avance_pion_safe_zone(player_id, old_position, 1)
             elif action == Action_EXACT_ASCENSION.MARCHE_6:
                 assert dice_value == 6, "Déplacement pas conforme à la position"
-                self.avance_pion_safe_zone(player_id, old_position, dice_value)
+                self.avance_pion_safe_zone(player_id, old_position, 1)
 
             elif action == Action_EXACT_ASCENSION.REACH_GOAL:
                 assert dice_value == 6, "Déplacement pas conforme à la position"
-                self.securise_pion_goal(player_id, old_position, dice_value)
+                self.securise_pion_goal(player_id, old_position, 1)
             elif action == Action_EXACT_ASCENSION.NO_ACTION:
                 pass
             else:
@@ -757,7 +757,7 @@ class GameLogic:
         
 
     def encode_valid_actions(self, valid_actions):
-        if valid_actions[self.nb_chevaux] == 0: # peu importe le NO_ACTION -> 0 
+        if valid_actions[self.nb_chevaux] == Action_EXACT.NO_ACTION or valid_actions[self.nb_chevaux] == Action_NO_EXACT.NO_ACTION or valid_actions[self.nb_chevaux] == Action_EXACT_ASCENSION.NO_ACTION: # peu importe le NO_ACTION -> 0 
             return [0]
         valid_actions = valid_actions[: self.nb_chevaux]
         encoded_actions = []
