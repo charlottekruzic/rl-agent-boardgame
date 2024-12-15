@@ -21,6 +21,7 @@ class LudoEnv(gym.Env):
         mode_pied_escalier= "not_exact",
         mode_rejoue_6 = "non", 
         mode_rejoue_marche = "non",
+        mode_protect = "désactivé",
 
         mode_gym="entrainement",
 
@@ -53,6 +54,10 @@ class LudoEnv(gym.Env):
             "oui",
             "non",
         ], "Only 'oui' or 'non' are allowed"
+        assert mode_protect in [
+            "activé",
+            "désactivé",
+        ], "Only 'activé' or 'désactivé' are allowed"
 
         assert (mode_ascension == "avec_contrainte" and mode_pied_escalier == "exact") \
             or (mode_ascension == "sans_contrainte" and mode_pied_escalier == "not_exact")\
@@ -75,6 +80,7 @@ class LudoEnv(gym.Env):
         self.mode_ascension = mode_ascension
         self.mode_rejoue_6 = mode_rejoue_6
         self.mode_rejoue_marche = mode_rejoue_marche
+        self.mode_protect = mode_protect
 
         if self.with_render:
             self.renderer = Renderer()
@@ -135,6 +141,7 @@ class LudoEnv(gym.Env):
             mode_fin_partie=self.mode_fin_partie,
             mode_ascension=self.mode_ascension,
             mode_pied_escalier=self.mode_pied_escalier,
+            mode_protect=self.mode_protect,
         )
         self.dice_roll = self.game.dice_generator()
         return self._get_observation(), {}
